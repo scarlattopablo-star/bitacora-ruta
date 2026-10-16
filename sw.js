@@ -1,6 +1,6 @@
 // Bitácora de Ruta — service worker: app offline + caché de mapas y consultas
-const V = 'bitacora-v5';
-const SHELL = ['./', './index.html', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png', './icons/apple-touch-icon.png', './assets/robot.webp', './assets/robot-head.webp', './assets/robot.mp4'];
+const V = 'bitacora-v6';
+const SHELL = ['./', './index.html', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png', './icons/apple-touch-icon.png', './assets/robot.webp', './assets/robot-head.webp'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(V).then(c => c.addAll(SHELL)).then(() => self.skipWaiting()));
@@ -12,6 +12,7 @@ self.addEventListener('fetch', e => {
   const req = e.request;
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
+  if (url.pathname.endsWith('.mp4')) return; // el video va directo (iOS necesita pedidos por partes)
   // Teselas del mapa: caché primero (sirve sin señal en ruta)
   if (url.hostname === 'tile.openstreetmap.org') {
     e.respondWith(caches.open('tiles').then(async c => {
