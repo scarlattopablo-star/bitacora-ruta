@@ -97,6 +97,14 @@ main{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
 .style-opt{border:1.5px solid var(--line);background:var(--surface-2);border-radius:12px;padding:10px 8px;text-align:left;display:flex;flex-direction:column;gap:2px;min-width:0}
 .style-opt b{font-family:var(--f-display);font-size:18px;text-transform:uppercase;letter-spacing:.03em}
 .style-opt span{font-size:12px;color:var(--muted);line-height:1.25}
+.legs{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.leg{border:1.5px solid var(--line);background:var(--surface);border-radius:12px;padding:10px 12px;text-align:left;display:flex;flex-direction:column;gap:2px}
+.leg b{font-family:var(--f-display);font-size:20px;text-transform:uppercase}
+.leg span{font-size:12px;color:var(--muted)}
+.leg[aria-pressed="true"]{border-color:var(--sign);background:var(--ok-soft);box-shadow:inset 0 0 0 1px var(--sign)}
+.town{display:grid;grid-template-columns:28px 1fr auto;gap:8px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
+.town input{width:22px;height:22px;accent-color:var(--sign)}
+.town small{display:block;color:var(--muted)}
 .style-opt[aria-pressed="true"]{border-color:var(--sign);background:var(--ok-soft);box-shadow:inset 0 0 0 1px var(--sign)}
 
 /* Formularios */
@@ -169,6 +177,7 @@ details.more[open] summary{margin-bottom:10px}
 .opt-main{display:grid;grid-template-columns:1fr auto;gap:2px 10px;border:0;background:none;padding:10px 12px;text-align:left;min-width:0;color:inherit}
 .pick{margin-right:8px;height:34px;border-radius:9px;border:1px solid var(--line);background:var(--surface-2);font-size:12px;font-weight:700;padding:0 10px;white-space:nowrap}
 .pick[aria-pressed="true"]{background:var(--sign);color:var(--sign-ink);border-color:var(--sign)}
+.dwell{display:inline-flex;flex-wrap:wrap;gap:4px;font-size:13px;margin-top:6px;padding:4px 10px;border-radius:8px;background:var(--amber-soft);color:var(--ink)}
 .sub-h{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:12px 0 -2px}
 .stop{padding:12px 0;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:2px}
 .stop:first-of-type{border-top:0}
@@ -287,6 +296,7 @@ details.more[open] summary{margin-bottom:10px}
     <!-- VIAJE -->
     <section class="view on" id="v-viaje">
       <div class="sign" id="hero"></div>
+      <div class="legs" id="legs" hidden></div>
 
       <div class="card">
         <h2>Estilo de viaje</h2>
@@ -305,7 +315,7 @@ details.more[open] summary{margin-bottom:10px}
           <button class="btn sm" id="add-via" style="align-self:flex-start">+ Agregar parada intermedia</button>
           <div class="field ac"><label for="f-to">Hasta</label><input class="input" id="f-to" autocomplete="off" placeholder="Destino"></div>
           <div class="grid2">
-            <div class="field"><label for="f-date">Salida</label><input class="input" type="date" id="f-date"></div>
+            <div class="field"><label for="f-date" id="f-date-l">Salida</label><input class="input" type="date" id="f-date"></div>
             <div class="field"><label for="f-time">Hora</label><input class="input" type="time" id="f-time"></div>
           </div>
           <div class="grid2">
@@ -313,7 +323,8 @@ details.more[open] summary{margin-bottom:10px}
             <div class="field"><label for="f-people">Personas</label><input class="input" type="number" min="1" id="f-people"></div>
           </div>
           <div class="field"><label for="f-nights">Noches en el camino</label><select class="input" id="f-nights"></select>
-            <div class="small muted" id="nights-hint"></div></div>
+            <div class="small muted" id="nights-hint"></div>
+            <button class="btn sm" id="pick-nights" style="align-self:flex-start;margin-top:4px" hidden>Elegir en qué ciudades dormir</button></div>
           <label class="toggle"><input type="checkbox" id="f-round"> Calcular también la vuelta</label>
           <details class="more">
             <summary>Auto y preferencias ›</summary>
@@ -340,6 +351,10 @@ details.more[open] summary{margin-bottom:10px}
                 <div class="field"><label for="f-fuel">Combustible</label><select class="input" id="f-fuel"><option value="super">Nafta súper</option><option value="premium">Nafta premium</option><option value="diesel">Gasoil</option></select></div>
               </div>
               <div class="grid2">
+                <div class="field" style="grid-column:1/-1"><label for="f-pace">Ritmo de las paradas</label><select class="input" id="f-pace">
+                  <option value="rapido">Rápido: carga 10 min, café 15, almuerzo 35</option>
+                  <option value="normal">Normal: carga 15 min, café 20, almuerzo 50</option>
+                  <option value="tranquilo">Tranquilo: carga 20 min, café 30, almuerzo 75</option></select></div>
                 <div class="field"><label for="f-hours">Horas de manejo por día</label><input class="input" type="number" step="0.5" min="3" max="14" id="f-hours"></div>
                 <div class="field"><label for="f-reserve">Reserva de tanque (%)</label><input class="input" type="number" min="10" max="50" id="f-reserve"></div>
               </div>
@@ -454,7 +469,7 @@ async function getJSON(url, opt = {}, ms = 20000){
 function hav(a, b){ const R = 6371, toR = Math.PI/180; const dLa = (b[1]-a[1])*toR, dLo = (b[0]-a[0])*toR;
   const x = Math.sin(dLa/2)**2 + Math.cos(a[1]*toR)*Math.cos(b[1]*toR)*Math.sin(dLo/2)**2; return 2*R*Math.asin(Math.sqrt(x)); }
 const fmtKm = km => Math.round(km).toLocaleString('es-UY') + ' km';
-const fmtH = h => { const hh = Math.floor(h), mm = Math.round((h-hh)*60); return hh + ' h' + (mm ? ' ' + String(mm).padStart(2,'0') : ''); };
+const fmtH = h => { const t = Math.round(h * 60), hh = Math.floor(t / 60), mm = t % 60; return hh + ' h' + (mm ? ' ' + String(mm).padStart(2,'0') : ''); };
 const hhmm = d => d.toLocaleTimeString('es-UY', {hour:'2-digit', minute:'2-digit', hour12:false});
 const dayName = d => d.toLocaleDateString('es-UY', {weekday:'long', day:'numeric', month:'short'});
 const isoDate = d => { const z = new Date(d.getTime() - d.getTimezoneOffset()*60000); return z.toISOString().slice(0,10); };
@@ -481,11 +496,24 @@ const DEFAULT = {
   prices:PRICE_DEFAULTS, apiKey:''
 };
 let S = Object.assign(structuredClone(DEFAULT), LS.get('bit.state', {}));
-let PLAN = LS.get('bit.plan', null);
+let PLANS = LS.get('bit.plans', null) || {ida:LS.get('bit.plan', null), vuelta:null};
+let LEG = 'ida';
+let PLAN = PLANS.ida;
+function backDate(){ // la vuelta sale después de los días de ida y las noches en destino
+  if(S.trip.backDate) return S.trip.backDate;
+  const d = new Date(S.trip.date + 'T12:00'); d.setDate(d.getDate() + (PLANS.ida?.days || 1) - 1 + S.trip.stay); return isoDate(d);
+}
+function LEGI(leg = LEG){
+  if(leg === 'ida') return {from:S.trip.from, to:S.trip.to, vias:S.trip.vias, date:S.trip.date, time:S.trip.time, overnights:S.trip.onIda || [], key:'onIda'};
+  return {from:S.trip.to, to:S.trip.from, vias:[...S.trip.vias].reverse(), date:backDate(), time:S.trip.backTime || S.trip.time, overnights:S.trip.onVuelta || [], key:'onVuelta'};
+}
+const COST = () => PLAN?.cost || PLANS.ida?.cost || PLANS.vuelta?.cost;
+function withPlan(p, fn){ const kP = PLAN, kG = G; PLAN = p; G = buildGeo(p.geoms[p.sel]); try{ return fn(); }finally{ PLAN = kP; G = kG; } }
+function retimeAll(){ const kL = LEG, kP = PLAN; for(const l of ['ida', 'vuelta']) if(PLANS[l]?.events){ LEG = l; PLAN = PLANS[l]; timeline(); } LEG = kL; PLAN = kP; }
 let EXP = LS.get('bit.exp', []);
 let RATES = LS.get('bit.rates', {USD:1, UYU:40.2, ARS:1530, CLP:985, BRL:5.05, PYG:5700, EUR:0.89, _ts:0, _src:'valores de referencia', _arsTarjeta:null, _uyuBrou:null});
 const save = () => LS.set('bit.state', S);
-const savePlan = () => LS.set('bit.plan', PLAN);
+const savePlan = () => { PLANS[LEG] = PLAN; LS.set('bit.plans', PLANS); };
 const saveExp = () => LS.set('bit.exp', EXP);
 
 /* ============ sonido y voz ============ */
@@ -740,7 +768,7 @@ async function planTrip(){
   SFX.tap();
   try{
     set(0, 'run');
-    const wps = [S.trip.from, ...S.trip.vias.filter(v => v.lat), S.trip.to];
+    const L = LEGI(); const wps = [L.from, ...L.vias.filter(v => v.lat), L.to];
     const coords = wps.map(w => w.lon + ',' + w.lat).join(';');
     const alt = wps.length === 2 ? '&alternatives=3' : '';
     const r = await getJSON(`https://router.project-osrm.org/route/v1/driving/${coords}?overview=full&geometries=geojson&steps=true${alt}`, {}, 30000);
@@ -751,7 +779,7 @@ async function planTrip(){
     await buildPlanFor(0, set);
     SFX.route();
     const p = PLAN, c = p.cost;
-    say(`Listo. Tu viaje a ${S.trip.to.name.split(',')[0]} tiene ${Math.round(p.km)} kilómetros, unas ${Math.round(p.h)} horas de manejo en ${p.days} ${p.days > 1 ? 'días' : 'día'}. Gasto estimado: ${spoken(c.total)}.`);
+    say(`Listo. Tu ${LEG === 'vuelta' ? 'vuelta' : 'viaje'} a ${LEGI().to.name.split(',')[0]} tiene ${Math.round(p.km)} kilómetros, unas ${Math.round(p.h)} horas de manejo en ${p.days} ${p.days > 1 ? 'días' : 'día'}. Gasto estimado: ${spoken(c.total)}.`);
   }catch(e){
     console.error(e); SFX.alert(); toast(e.message || 'No pude armar la ruta. Revisá la señal.');
     steps.forEach(s => { if(s.st === 'run') s.st = 'err'; }); stepUI(steps);
@@ -765,6 +793,8 @@ function summarize(rt){
 function simplifyCoords(c){ const out = [c[0]]; let last = c[0]; for(let i = 1; i < c.length - 1; i++){ if(hav(last, c[i]) > 0.35){ out.push([+c[i][0].toFixed(5), +c[i][1].toFixed(5)]); last = c[i]; } } out.push(c[c.length-1]); return out; }
 
 async function buildPlanFor(sel, set = () => {}){
+  if(PLAN.townsFor !== sel) PLAN.towns = null;
+  const keepCustom = (PLAN.events || []).flatMap(e => [['choice', e.opts], ['foodChoice', e.food]].flatMap(([f, arr]) => (arr || []).filter(o => o.custom).map(o => ({type:e.type, km:e.km, town:e.town, f, o, sel:(e[f] ?? 0) === arr.indexOf(o)}))));
   PLAN.sel = sel; const rt = PLAN.routes[sel]; OVP_FAIL = 0;
   G = buildGeo(PLAN.geoms[sel]); PLAN.km = G.total; PLAN.h = rt.h;
   const kmh = G.total / rt.h; PLAN.kmh = kmh;
@@ -782,7 +812,8 @@ async function buildPlanFor(sel, set = () => {}){
 
   // 2. eventos base
   const ev = [];
-  ev.push({type:'start', km:0, title:S.trip.from.name.split(',')[0], ll:G.pts[0]});
+  const L = LEGI();
+  ev.push({type:'start', km:0, title:L.from.name.split(',')[0], ll:G.pts[0]});
   // fronteras
   for(let i = 1; i < PLAN.cc.length; i++) if(PLAN.cc[i].cc && PLAN.cc[i-1].cc && PLAN.cc[i].cc !== PLAN.cc[i-1].cc){
     const km = (PLAN.cc[i].km + PLAN.cc[i-1].km) / 2;
@@ -790,17 +821,19 @@ async function buildPlanFor(sel, set = () => {}){
   }
   // vias elegidas por la persona
   PLAN.borders = ev.filter(e => e.type === 'border').map(e => ({km:e.km, to:e.to}));
-  for(const v of S.trip.vias.filter(v => v.lat)){ const k = kmOfPoint([v.lon, v.lat]).km; ev.push({type:'sight', km:k, title:v.name.split(',')[0], ll:[v.lon, v.lat], via:true}); }
-  ev.push({type:'end', km:G.total, title:S.trip.to.name.split(',')[0], ll:G.pts[G.pts.length-1]});
+  for(const v of L.vias.filter(v => v.lat)){ const k = kmOfPoint([v.lon, v.lat]).km; ev.push({type:'sight', km:k, title:v.name.split(',')[0], ll:[v.lon, v.lat], via:true}); }
+  ev.push({type:'end', km:G.total, title:L.to.name.split(',')[0], ll:G.pts[G.pts.length-1]});
 
   // 3. noches y almuerzos
   const hours = S.prefs.hours, dayKm = hours * kmh, fixedN = S.prefs.nights === 'auto' || S.prefs.nights == null ? null : +S.prefs.nights;
-  const nights = [];
-  if(fixedN == null){ for(let k = dayKm; k < G.total - kmh * 1.5; k += dayKm) nights.push(k); }
+  const nights = [], preset = [];
+  const chosen = L.overnights.filter(o => o.lat).map(o => ({o, ...kmOfPoint([o.lon, o.lat])})).filter(x => x.off < 30 && x.km > 20 && x.km < G.total - 20);
+  if(chosen.length){ chosen.sort((a, b) => a.km - b.km).forEach(x => { nights.push(x.km); preset.push(x); }); }
+  else if(fixedN == null){ for(let k = dayKm; k < G.total - kmh * 1.5; k += dayKm) nights.push(k); }
   else for(let i = 1; i <= fixedN; i++) nights.push(G.total * i / (fixedN + 1)); // tramos parejos
   const dayStarts = [0, ...nights];
   dayStarts.forEach((s, i) => { const e = nights[i] ?? G.total; if((e - s) / kmh > 5){ ev.push({type:'lunch', km:s + Math.min(4.5 * kmh, (e - s) * .5), title:'Almuerzo'}); } });
-  nights.forEach(k => ev.push({type:'night', km:k, title:'Noche'}));
+  nights.forEach(k => { const pr = preset.find(x => x.km === k); ev.push(pr ? {type:'night', km:k, title:'Noche en ' + pr.o.name, town:pr.o.name, ll:[pr.o.lon, pr.o.lat]} : {type:'night', km:k, title:'Noche'}); });
 
   // 4. combustible
   set(2, 'run');
@@ -851,6 +884,13 @@ async function buildPlanFor(sel, set = () => {}){
   set(5, 'run');
   try{ await sightsAlong(); set(5, 'ok'); }catch{ set(5, 'err'); }
 
+  for(const c of keepCustom){ // tus lugares cargados vuelven a la parada equivalente
+    const tgt = PLAN.events.filter(e => e.type === c.type).sort((a, b) => Math.abs(a.km - c.km) - Math.abs(b.km - c.km))[0];
+    if(!tgt || (Math.abs(tgt.km - c.km) > 80 && tgt.town !== c.town)) continue;
+    const arr = c.f === 'choice' ? (tgt.opts = tgt.opts || []) : (tgt.food = tgt.food || []);
+    if(!arr.some(x => x.id === c.o.id)){ arr.unshift(c.o); if(c.sel) tgt[c.f] = 0; else if(tgt[c.f] != null) tgt[c.f]++; }
+  }
+  retimeAll();
   computeCost();
   savePlan();
   renderAll();
@@ -913,20 +953,54 @@ async function lodgingNear(ll, cc, style, r = 7000){
 }
 
 /* ETA de cada evento */
+const PACE = { // minutos por tipo de parada
+  rapido:{fuel:10, snack:15, lunch:35, border:40, sight:30},
+  normal:{fuel:15, snack:20, lunch:50, border:45, sight:45},
+  tranquilo:{fuel:20, snack:30, lunch:75, border:50, sight:75}
+};
+const STYLE_PACE = {eco:'rapido', confort:'normal', top:'tranquilo'};
 function timeline(){
   if(!PLAN?.events) return;
-  const [y, m, d] = S.trip.date.split('-').map(Number); const [hh, mi] = S.trip.time.split(':').map(Number);
-  let t = new Date(y, m - 1, d, hh, mi); let prev = 0, day = 1;
-  const dwell = {fuel:.33, snack:.33, lunch:1, border:.75, sight:.75};
+  const L = LEGI(); const [y, m, d] = L.date.split('-').map(Number); const [hh, mi] = L.time.split(':').map(Number);
+  const pace = PACE[S.prefs.pace || STYLE_PACE[S.prefs.style]] || PACE.normal;
+  // carga cerca de una comida o café: se hace en la misma parada
+  PLAN.events.forEach(e => { e.combo = null; });
+  PLAN.events.filter(e => e.type === 'fuel').forEach(f => {
+    const near = PLAN.events.find(x => (x.type === 'lunch' || x.type === 'snack') && Math.abs(x.km - f.km) < 25);
+    if(near){ f.combo = near.type; near.combo = 'fuel'; }
+  });
+  let t = new Date(y, m - 1, d, hh, mi), prev = 0, day = 1;
+  PLAN.dayStats = [{day:1, start:t.getTime(), drive:0, stops:0}];
   for(const e of PLAN.events){
-    t = new Date(t.getTime() + (e.km - prev) / PLAN.kmh * 3600e3); prev = e.km;
+    const driveH = (e.km - prev) / PLAN.kmh; prev = e.km;
+    t = new Date(t.getTime() + driveH * 3600e3);
+    const ds = PLAN.dayStats[day - 1]; ds.drive += driveH;
     e.eta = t.getTime(); e.day = day;
-    if(e.type === 'night'){ day++; const n = new Date(t); n.setDate(n.getDate() + 1); n.setHours(hh, mi, 0, 0); t = n; }
-    else if(dwell[e.type]) t = new Date(t.getTime() + dwell[e.type] * 3600e3);
+    let mins = pace[e.type] || 0;
+    if(e.type === 'fuel' && e.combo) mins = 5; // solo cargar, el resto del tiempo es la comida
+    if((e.type === 'lunch' || e.type === 'snack') && e.combo === 'fuel') mins += 5;
+    e.dwell = mins;
+    if(e.type === 'night' || e.type === 'end'){ ds.end = t.getTime(); ds.to = e.title; }
+    if(e.type === 'night'){
+      day++; const n = new Date(t); n.setDate(n.getDate() + 1); n.setHours(hh, mi, 0, 0); t = n; e.leave = t.getTime();
+      PLAN.dayStats.push({day, start:t.getTime(), drive:0, stops:0});
+    }else if(mins){ ds.stops += mins; t = new Date(t.getTime() + mins * 60e3); e.leave = t.getTime(); }
   }
   PLAN.days = day;
 }
-
+function dwellLine(e){
+  if(e.type === 'night') return `<div class="dwell">Llegás ${hhmm(new Date(e.eta))} · salís mañana ${hhmm(new Date(e.leave))}${e.sunset && e.eta > e.sunset ? ' · <b>llegás de noche</b> (oscurece ' + hhmm(new Date(e.sunset)) + ')' : ''}</div>`;
+  if(e.type === 'end') return `<div class="dwell">Llegada ${hhmm(new Date(e.eta))}${e.sunset && e.eta > e.sunset ? ' · <b>de noche</b> (oscurece ' + hhmm(new Date(e.sunset)) + ')' : ''}</div>`;
+  if(!e.dwell) return '';
+  const note = e.type === 'fuel' && e.combo ? ' · cargá y seguí: la parada larga es la ' + (e.combo === 'lunch' ? 'del almuerzo' : 'del café') + ', a pocos km'
+    : e.combo === 'fuel' ? ' · aprovechá a cargar combustible acá' : '';
+  return `<div class="dwell">Parada de ${e.dwell} min · salís ${hhmm(new Date(e.leave))}${note}</div>`;
+}
+function dayStatLine(day){
+  const d = PLAN.dayStats?.[day - 1]; if(!d) return '';
+  const st = d.stops >= 60 ? fmtH(d.stops / 60) : d.stops + ' min';
+  return `<div class="small muted" style="margin-top:2px">Salís ${hhmm(new Date(d.start))} · ${fmtH(d.drive)} de manejo + ${st} de paradas${d.end ? ' · llegás ' + hhmm(new Date(d.end)) : ''}</div>`;
+}
 /* ============ clima ============ */
 const WX = c => c === 0 ? ['Despejado', 'sun'] : c <= 2 ? ['Parcial nublado', 'pcloud'] : c === 3 ? ['Nublado', 'cloud'] : c <= 48 ? ['Niebla', 'fog'] : c <= 57 ? ['Llovizna', 'rain'] : c <= 67 ? ['Lluvia', 'rain'] : c <= 77 ? ['Nieve', 'snow'] : c <= 82 ? ['Chaparrones', 'rain'] : c <= 86 ? ['Nevadas', 'snow'] : ['Tormenta', 'storm'];
 const WXI = {
@@ -942,7 +1016,7 @@ const wxIcon = k => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" 
 async function weatherForEvents(){
   const evs = PLAN.events.filter(e => ['start','lunch','night','end','border','fuel'].includes(e.type));
   const lat = evs.map(e => e.ll[1].toFixed(3)).join(','), lon = evs.map(e => e.ll[0].toFixed(3)).join(',');
-  const d = await getJSON(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=temperature_2m,precipitation,weather_code,wind_gusts_10m,snowfall,visibility&daily=temperature_2m_max,temperature_2m_min,weather_code,precipitation_sum,wind_gusts_10m_max,snowfall_sum&timezone=auto&forecast_days=16`);
+  const d = await getJSON(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=temperature_2m,precipitation,weather_code,wind_gusts_10m,snowfall,visibility&daily=temperature_2m_max,temperature_2m_min,weather_code,precipitation_sum,wind_gusts_10m_max,snowfall_sum,sunset&timezone=auto&forecast_days=16`);
   const arr = Array.isArray(d) ? d : [d];
   evs.forEach((e, i) => {
     const w = arr[i]; if(!w) return; e.elev = w.elevation;
@@ -951,6 +1025,7 @@ async function weatherForEvents(){
     if(hi < 0){ e.wx = null; return; }
     e.wx = {t:w.hourly.temperature_2m[hi], p:w.hourly.precipitation[hi], code:w.hourly.weather_code[hi], g:w.hourly.wind_gusts_10m[hi], sn:w.hourly.snowfall[hi], vis:w.hourly.visibility?.[hi]};
     const di = w.daily.time.indexOf(iso.slice(0, 10));
+    if(di >= 0 && w.daily.sunset?.[di]) e.sunset = new Date(w.daily.sunset[di]).getTime();
     if(di >= 0) e.wxd = {max:w.daily.temperature_2m_max[di], min:w.daily.temperature_2m_min[di], p:w.daily.precipitation_sum[di], g:w.daily.wind_gusts_10m_max[di], sn:w.daily.snowfall_sum[di], code:w.daily.weather_code[di]};
     if(e.type === 'end') e.forecast = w.daily.time.map((t, j) => ({t, max:w.daily.temperature_2m_max[j], min:w.daily.temperature_2m_min[j], code:w.daily.weather_code[j], p:w.daily.precipitation_sum[j]})).filter(x => x.t >= iso.slice(0, 10)).slice(0, S.trip.stay + 1);
   });
@@ -960,7 +1035,7 @@ function buildAlerts(){
   const out = [];
   if(!PLAN?.events) return out;
   const anyWx = PLAN.events.some(e => e.wx);
-  const daysAhead = (new Date(S.trip.date) - new Date()) / 864e5;
+  const daysAhead = (new Date(LEGI().date) - new Date()) / 864e5;
   if(!anyWx) out.push(['info', `El pronóstico hora por hora aparece cuando faltan menos de 16 días para salir${daysAhead > 15 ? '' : '. Tocá “Actualizar clima” si recién cambiaste la fecha'}.`]);
   for(const e of PLAN.events){
     const w = e.wx, wd = e.wxd; if(!w) continue;
@@ -972,6 +1047,10 @@ function buildAlerts(){
     if(w.code >= 95) out.push(['bad', `<b>Tormenta eléctrica en ${esc(where)}</b>. Si podés, esperá a que pase en una estación de servicio.`]);
     if(w.code === 45 || w.code === 48 || (w.vis != null && w.vis < 1000)) out.push(['warn', `<b>Niebla en ${esc(where)}</b>. Luces bajas, nunca altas, y más distancia con el de adelante.`]);
     if(w.t >= 34) out.push(['warn', `<b>Calor en ${esc(where)}</b> (${Math.round(w.t)}°). Llevá agua y vigilá la temperatura del motor.`]);
+  }
+  for(const e of PLAN.events.filter(x => (x.type === 'night' || x.type === 'end') && x.sunset && x.eta > x.sunset + 15 * 60e3)){
+    const late = Math.round((e.eta - e.sunset) / 60e3);
+    out.push(['warn', `<b>El día ${e.day} llegás de noche a ${esc(e.title.replace(/^Noche en /, ''))}</b> (${hhmm(new Date(e.eta))}, oscurece ${hhmm(new Date(e.sunset))}). Para llegar con luz salí ${fmtH(late / 60)} antes, poné el ritmo de paradas en “Rápido” o sumá una noche en el camino.`]);
   }
   const ccs = [...new Set((PLAN.cc || []).map(c => c.cc))];
   if(ccs.includes('AR')) out.push(['info', '<b>En Argentina</b>: luces bajas encendidas siempre en ruta, alcohol cero al volante, matafuego, dos balizas triangulares y chaleco reflectante. Velocidad máxima 110 km/h en ruta y 130 en autopista.']);
@@ -1028,34 +1107,46 @@ async function wikiSearch(q){
 }
 
 /* ============ costos ============ */
+function legRoad(p){ // costos del camino de un tramo (ida o vuelta)
+  return withPlan(p, () => {
+    const people = S.prefs.people, style = S.prefs.style, rooms = Math.ceil(people / 2);
+    let fuel = 0, toll = 0;
+    for(let k = 0; k < G.total; k += 20){ const seg = Math.min(20, G.total - k), c = countryAt(k + seg / 2);
+      fuel += seg * S.car.cons / 100 * P(c).fuel[S.car.fuel]; toll += seg * P(c).toll / 100; }
+    const nights = PLAN.events.filter(e => e.type === 'night');
+    const pick = (e, def) => { const o = e.opts?.[e.choice ?? 0]; return o?.est ? (o.est[0] + o.est[1]) / 2 : def; };
+    const pickF = (e, def) => { const o = e.food?.[e.foodChoice ?? 0]; return o?.est ? (o.est[0] + o.est[1]) / 2 : def; };
+    let hotel = 0; nights.forEach(e => hotel += pick(e, P(countryAt(e.km)).hotel[style] * rooms));
+    let meals = 0;
+    PLAN.events.filter(e => e.type === 'lunch' || e.type === 'snack').forEach(e => meals += pick(e, e.type === 'snack' ? P(countryAt(e.km)).meal.eco * .45 : P(countryAt(e.km)).meal[style]) * people);
+    nights.forEach(e => meals += pickF(e, P(countryAt(e.km)).meal[style]) * people + P(countryAt(e.km)).meal.eco * .5 * people); // cena + desayuno
+    return {combustible:fuel, peajes:toll, comida:meals, alojamiento:hotel, litros:G.total * S.car.cons / 100};
+  });
+}
 function computeCost(){
-  if(!PLAN?.events || !G) return;
+  if(PLAN) PLANS[LEG] = PLAN;
+  const A = PLANS.ida?.events ? PLANS.ida : null, B = PLANS.vuelta?.events ? PLANS.vuelta : null;
+  if(!A && !B) return;
   const people = S.prefs.people, style = S.prefs.style, rooms = Math.ceil(people / 2);
-  let fuel = 0, toll = 0;
-  const cc = PLAN.cc || [];
-  for(let k = 0; k < G.total; k += 20){ const seg = Math.min(20, G.total - k), c = countryAt(k + seg / 2);
-    fuel += seg * S.car.cons / 100 * P(c).fuel[S.car.fuel]; toll += seg * P(c).toll / 100; }
-  const nights = PLAN.events.filter(e => e.type === 'night');
-  const pick = (e, def) => { const o = e.opts?.[e.choice ?? 0]; return o?.est ? (o.est[0] + o.est[1]) / 2 : def; };
-  let hotelRoad = 0; nights.forEach(e => hotelRoad += pick(e, P(countryAt(e.km)).hotel[style] * rooms));
-  const end = PLAN.events.find(e => e.type === 'end'); const dcc = countryAt(G.total);
-  const stayHotel = S.trip.stay * pick(end, P(dcc).hotel[style] * rooms);
-  const pickF = (e, def) => { const o = e.food?.[e.foodChoice ?? 0]; return o?.est ? (o.est[0] + o.est[1]) / 2 : def; };
-  let mealsRoad = 0;
-  PLAN.events.filter(e => e.type === 'lunch' || e.type === 'snack').forEach(e => mealsRoad += pick(e, e.type === 'snack' ? P(countryAt(e.km)).meal.eco * .45 : P(countryAt(e.km)).meal[style]) * people);
-  nights.forEach(e => mealsRoad += pickF(e, P(countryAt(e.km)).meal[style]) * people + P(countryAt(e.km)).meal.eco * .5 * people); // cena + desayuno
-  const stayMeals = S.trip.stay * people * (P(dcc).meal[style] + pickF(end, P(dcc).meal[style]) + P(dcc).meal.eco * .5);
-  const mult = S.trip.round ? 2 : 1;
+  const ida = legRoad(A || B), vuelta = B ? legRoad(B) : S.trip.round ? ida : null;
+  // estadía en destino: hotel y comida elegidos al llegar en la ida
+  const pick = (o, def) => o?.est ? (o.est[0] + o.est[1]) / 2 : def;
+  const stay = withPlan(A || B, () => {
+    const end = A ? PLAN.events.find(e => e.type === 'end') : PLAN.events.find(e => e.type === 'start');
+    const dcc = A ? countryAt(G.total) : countryAt(0);
+    return {dcc, hotel:S.trip.stay * pick(end?.opts?.[end.choice ?? 0], P(dcc).hotel[style] * rooms),
+      meals:S.trip.stay * people * (P(dcc).meal[style] + pick(end?.food?.[end.foodChoice ?? 0], P(dcc).meal[style]) + P(dcc).meal.eco * .5)};
+  });
+  const sum = k => ida[k] + (vuelta ? vuelta[k] : 0);
   const cat = {
-    combustible: fuel * mult + (S.trip.stay ? 80 / 100 * S.car.cons * P(dcc).fuel[S.car.fuel] * Math.min(S.trip.stay, 4) * .6 : 0),
-    peajes: toll * mult,
-    comida: mealsRoad * mult + stayMeals,
-    alojamiento: hotelRoad * mult + stayHotel,
+    combustible: sum('combustible') + (S.trip.stay ? 80 / 100 * S.car.cons * P(stay.dcc).fuel[S.car.fuel] * Math.min(S.trip.stay, 4) * .6 : 0),
+    peajes: sum('peajes'), comida: sum('comida') + stay.meals, alojamiento: sum('alojamiento') + stay.hotel,
     excursiones: S.trip.stay * people * ({eco:6, confort:15, top:35}[style])
   };
   const sub = Object.values(cat).reduce((a, b) => a + b, 0);
   cat.imprevistos = sub * .07;
-  PLAN.cost = {cat, total:sub * 1.07, fuelL:G.total * S.car.cons / 100 * mult, perPerson:sub * 1.07 / people, style};
+  const cost = {cat, total:sub * 1.07, fuelL:sum('litros'), perPerson:sub * 1.07 / people, style, vueltaEstimada:S.trip.round && !B, legs:{ida:ida.combustible + ida.peajes + ida.comida + ida.alojamiento, vuelta:vuelta ? vuelta.combustible + vuelta.peajes + vuelta.comida + vuelta.alojamiento : 0, estadia:stay.hotel + stay.meals}};
+  if(A) A.cost = cost; if(B) B.cost = cost;
 }
 const spoken = usd => { const c = S.prefs.cur; const v = Math.round(conv(usd, 'USD', c)); const name = {USD:'dólares', UYU:'pesos uruguayos', ARS:'pesos argentinos', CLP:'pesos chilenos', BRL:'reales', EUR:'euros'}[c] || c; return v.toLocaleString('es-UY') + ' ' + name; };
 
@@ -1097,10 +1188,10 @@ function editExp(id){
   $('#exp-form-h').scrollIntoView({behavior:'smooth', block:'start'}); SFX.tap();
 }
 function renderExpenses(){
-  const total = EXP.reduce((a, x) => a + expUSD(x), 0), est = PLAN?.cost?.total || 0;
+  const total = EXP.reduce((a, x) => a + expUSD(x), 0), est = COST()?.total || 0;
   const byCat = {}; EXP.forEach(x => byCat[x.cat] = (byCat[x.cat] || 0) + expUSD(x));
   const pct = est ? Math.min(100, total / est * 100) : 0;
-  const rows = Object.keys(CATS).map(k => { const spent = byCat[k] || 0, e = k === 'otros' ? (PLAN?.cost?.cat.imprevistos || 0) : (PLAN?.cost?.cat[k] || 0);
+  const rows = Object.keys(CATS).map(k => { const spent = byCat[k] || 0, e = k === 'otros' ? (COST()?.cat.imprevistos || 0) : (COST()?.cat[k] || 0);
     if(!spent && !e) return ''; const w = e ? Math.min(100, spent / e * 100) : 100;
     return `<div class="bar-row"><span>${CATS[k][0]}</span><div class="bar"><i class="${spent > e && e ? 'over' : ''}" style="width:${w}%"></i></div><span class="num small">${money(spent)} <span class="muted">/ ${money(e)}</span></span></div>`; }).join('');
   $('#exp-sum').innerHTML = `
@@ -1119,16 +1210,32 @@ function renderExpenses(){
 
 /* ============ render: viaje ============ */
 function renderHero(){
-  const p = PLAN, from = S.trip.from.name.split(',')[0], to = S.trip.to.name.split(',')[0];
-  $('#hdr-trip').textContent = `${from} → ${to}`;
+  const L = LEGI(), p = PLAN, from = L.from.name.split(',')[0], to = L.to.name.split(',')[0], c = COST();
+  $('#hdr-trip').textContent = `${S.trip.from.name.split(',')[0]} ⇄ ${S.trip.to.name.split(',')[0]}`;
   const rt = p?.routes?.[p.sel];
+  const legTxt = c?.legs ? `<div class="small" style="opacity:.85">Ida ${money(c.legs.ida)}${S.trip.round ? ' · vuelta ' + money(c.legs.vuelta) + (c.vueltaEstimada ? ' (estimada)' : '') : ''} · estadía ${money(c.legs.estadia)}</div>` : '';
   $('#hero').innerHTML = `
-    <div class="route-shield">${rt ? esc(rt.via) : 'Planificá tu viaje'}</div>
+    <div class="route-shield">${S.trip.round ? (LEG === 'ida' ? 'Ida · ' : 'Vuelta · ') : ''}${rt ? esc(rt.via) : 'Planificá tu viaje'}</div>
     <div class="dest"><span>${esc(to)}</span>${p?.km ? `<span class="km">${fmtKm(p.km)}</span>` : ''}</div>
-    <div class="from">desde ${esc(from)}${S.trip.vias.length ? ' · ' + S.trip.vias.length + ' paradas' : ''}</div>
-    ${p?.cost ? `<div class="sign-stats"><div><small>Manejo</small><b>${fmtH(p.h)}</b></div><div><small>Días</small><b>${p.days}</b></div><div><small>Combustible</small><b>${Math.round(p.cost.fuelL)} L</b></div></div>
-    <div class="total"><span>Gasto estimado ${S.trip.round ? 'ida y vuelta' : 'solo ida'} · ${STYLES[p.cost.style].label}</span><b class="num">${money(p.cost.total)} ${S.prefs.cur}</b></div>
-    <div class="small" style="opacity:.85">≈ ${money(p.cost.perPerson)} por persona · ${money(p.cost.total, S.prefs.cur === 'ARS' ? 'UYU' : 'ARS')} ${S.prefs.cur === 'ARS' ? 'UYU' : 'ARS'}</div>` : `<div class="small" style="margin-top:12px;opacity:.9">Elegí origen, destino y estilo, y tocá “Calcular ruta”.</div>`}`;
+    <div class="from">desde ${esc(from)}${L.vias.length ? ' · ' + L.vias.length + ' paradas' : ''}</div>
+    ${p?.events ? `<div class="sign-stats"><div><small>Manejo</small><b>${fmtH(p.h)}</b></div><div><small>Días</small><b>${p.days}</b></div><div><small>Combustible</small><b>${Math.round(p.km * S.car.cons / 100)} L</b></div></div>` : `<div class="small" style="margin-top:12px;opacity:.9">${LEG === 'vuelta' ? 'La vuelta todavía no está calculada. Revisá la fecha y tocá “Calcular la vuelta”.' : 'Elegí origen, destino y estilo, y tocá “Calcular ruta”.'}</div>`}
+    ${c ? `<div class="total"><span>Gasto estimado ${S.trip.round ? 'ida y vuelta' : 'solo ida'} · ${STYLES[c.style].label}</span><b class="num">${money(c.total)} ${S.prefs.cur}</b></div>
+    <div class="small" style="opacity:.85">≈ ${money(c.perPerson)} por persona · ${money(c.total, S.prefs.cur === 'ARS' ? 'UYU' : 'ARS')} ${S.prefs.cur === 'ARS' ? 'UYU' : 'ARS'}</div>${legTxt}` : ''}`;
+  renderLegs();
+}
+function renderLegs(){
+  const el = $('#legs'); el.hidden = !S.trip.round; if(!S.trip.round) return;
+  const lbl = l => { const L = LEGI(l), pl = PLANS[l]; const d = new Date(L.date + 'T12:00').toLocaleDateString('es-UY', {weekday:'short', day:'numeric', month:'short'});
+    return `<button class="leg" data-l="${l}" aria-pressed="${LEG === l}"><b>${l === 'ida' ? 'Ida' : 'Vuelta'}</b><span>${d} · ${pl?.events ? pl.days + (pl.days > 1 ? ' días' : ' día') : 'sin calcular'}</span></button>`; };
+  el.innerHTML = lbl('ida') + lbl('vuelta');
+  el.querySelectorAll('.leg').forEach(b => b.onclick = () => switchLeg(b.dataset.l));
+}
+function switchLeg(l){
+  if(l === LEG) return; if(planning){ toast('Esperá a que termine el cálculo'); return; }
+  readForm(); savePlan(); LEG = l; PLAN = PLANS[l]; G = null; SFX.tap();
+  fillForm(); renderVias(); renderAll(); if(map){ fitRoute(); }
+  $('#calc').textContent = l === 'vuelta' ? (PLAN ? 'Recalcular la vuelta' : 'Calcular la vuelta') : 'Calcular ruta';
+  toast(l === 'vuelta' ? 'Viendo la vuelta: ' + LEGI().from.name.split(',')[0] + ' → ' + LEGI().to.name.split(',')[0] : 'Viendo la ida');
 }
 function renderRoutes(){
   if(!PLAN?.routes){ $('#routes-card').hidden = true; return; }
@@ -1156,19 +1263,23 @@ function renderNights(){
   let autoN = null; if(h){ autoN = 0; for(let t = S.prefs.hours; t < h - 1.5; t += S.prefs.hours) autoN++; } // mismo criterio que el cálculo
   sel.innerHTML = `<option value="auto">Automático (máx. ${S.prefs.hours} h por día${autoN != null ? ' → ' + autoN + (autoN === 1 ? ' noche' : ' noches') : ''})</option>`
     + [0, 1, 2, 3, 4, 5, 6].map(n => `<option value="${n}">${n === 0 ? 'Ninguna, de un tirón' : n + (n === 1 ? ' noche' : ' noches')}${per(n)}</option>`).join('');
-  sel.value = String(cur);
+  const ov = LEGI().overnights;
+  if(ov.length) sel.innerHTML += `<option value="custom">Elegidas por vos: ${esc(ov.map(o => o.name).join(', '))}</option>`;
+  sel.value = ov.length ? 'custom' : String(cur);
+  $('#pick-nights').hidden = !PLAN?.events;
   let hint = '';
-  if(h){ const n = cur === 'auto' ? autoN : +cur, dh = h / (n + 1);
+  if(h){ const n = ov.length ? ov.length : cur === 'auto' ? autoN : +cur, dh = h / (n + 1);
     hint = `${fmtKm(kmTot)} y ${fmtH(h)} de manejo en total: ${n === 0 ? 'todo en un día' : n + (n === 1 ? ' noche' : ' noches') + ' en el camino, unos ' + fmtKm(kmTot / (n + 1)) + ' por día'}.`;
     if(dh > 11) hint += ' Son jornadas muy largas: conviene sumar una noche o turnarse para manejar.';
     else if(dh < 4 && n > 0) hint += ' Son jornadas cortas: te sobra tiempo para pasear en cada parada.';
   }else hint = 'Calculá la ruta y te digo cuántas horas manejarías por día con cada opción.';
   $('#nights-hint').textContent = hint;
 }
-$('#f-nights').addEventListener('change', () => { S.prefs.nights = $('#f-nights').value; save(); renderNights(); if(PLAN?.routes) replanStops(PLAN.sel, S.prefs.nights === '0' ? 'Viaje de un tirón, sin noches en el camino' : 'Paradas para dormir actualizadas'); });
+$('#pick-nights').onclick = () => openNightPicker();
+$('#f-nights').addEventListener('change', () => { if($('#f-nights').value === 'custom') return; S.trip[LEGI().key] = []; S.prefs.nights = $('#f-nights').value; save(); renderNights(); if(PLAN?.routes) replanStops(PLAN.sel, S.prefs.nights === '0' ? 'Viaje de un tirón, sin noches en el camino' : 'Paradas para dormir actualizadas'); });
 $('#f-hours').addEventListener('change', () => { readForm(); renderNights(); });
 function renderCost(){
-  const c = PLAN?.cost; if(!c){ $('#cost-card').hidden = true; return; }
+  const c = COST(); if(!c){ $('#cost-card').hidden = true; return; }
   $('#cost-card').hidden = false;
   const max = Math.max(...Object.values(c.cat));
   $('#cost-card').innerHTML = `<h2>En qué se va la plata</h2>
@@ -1194,7 +1305,7 @@ function optHTML(o, i, ev, field = 'choice', idx = null){
   const pr = o.est ? `${money(o.est[0])}–${money(o.est[1])}<br><span class="muted">${unit}</span>`
     : o.kind === 'fuel' && ev?.km != null ? `${money(P(countryAt(ev.km)).fuel[S.car.fuel], S.prefs.cur, {dec:2})}<br><span class="muted">el litro</span>` : '';
   const sel = i === (ev?.[field] ?? 0), chosen = ev?.[field] != null;
-  const badge = idx == null && sel ? '<span class="badge" style="margin-right:6px">Recomendado</span>' : '';
+  const badge = (o.custom ? '<span class="badge amber" style="margin-right:6px">Tuyo</span>' : '') + (idx == null && sel ? '<span class="badge" style="margin-right:6px">Recomendado</span>' : '');
   const pick = idx != null ? `<button class="pick" data-ev="${idx}" data-f="${field}" data-i="${i}" aria-pressed="${sel}">${sel ? (chosen ? 'Elegido' : 'Recomendado') : 'Elegir'}</button>` : '';
   return `<div class="opt ${sel ? 'rec' : ''}"><button class="opt-main" data-o="${esc(o.id)}"><span class="nm">${badge}${esc(o.name)}</span><span class="pr">${pr}</span><span class="why">${esc(o.why || '')}</span></button>${pick}</div>`;
 }
@@ -1205,12 +1316,19 @@ function emptyStop(e, idx, what){
     <a class="btn sm" target="_blank" rel="noopener" href="https://www.google.com/maps/search/${encodeURIComponent(q)}/@${ll[1]},${ll[0]},13z">${q[0].toUpperCase() + q.slice(1)} en Google Maps</a>
     ${what === 'lodge' && e.town ? `<a class="btn sm" target="_blank" rel="noopener" href="https://www.booking.com/searchresults.es.html?ss=${encodeURIComponent(e.town)}">Booking</a>` : ''}</div>`;
 }
+function addBtn(idx, field, kind){ return `<button class="btn sm" data-add="${idx}" data-f="${field}" data-k="${kind}" style="margin-top:6px">+ Agregar otro ${kind === 'lodge' ? 'hotel' : 'lugar'}</button>`; }
+function listFor(e, field){ return field === 'foodChoice' ? (e.food = e.food || []) : (e.opts = e.opts || []); }
+function showList(e, idx, field, kind, n){ // opciones recomendadas + las cargadas por vos (siempre visibles)
+  const arr = listFor(e, field), sel = e[field] ?? 0;
+  const shown = arr.map((o, i) => ({o, i})).filter(x => x.i < n || x.o.custom || x.i === sel);
+  return (shown.length ? `<div class="opts">${shown.map(x => optHTML(x.o, x.i, e, field, idx)).join('')}</div>` : emptyStop(e, idx, kind === 'lodge' ? 'lodge' : kind)) + addBtn(idx, field, kind);
+}
 function stopOptions(e, idx, n = 4){
   if(e.type === 'fuel') return e.opts?.length ? `<div class="opts">${e.opts.slice(0, 3).map((o, i) => optHTML(o, i, e)).join('')}</div>` : '';
-  if(e.type === 'lunch' || e.type === 'snack') return e.opts?.length ? `<div class="opts">${e.opts.slice(0, n).map((o, i) => optHTML(o, i, e, 'choice', idx)).join('')}</div>` : emptyStop(e, idx, e.type === 'snack' ? 'snack' : 'food');
+  if(e.type === 'lunch' || e.type === 'snack') return showList(e, idx, 'choice', e.type === 'snack' ? 'snack' : 'food', n);
   if(e.type === 'night' || e.type === 'end'){
-    let h = `<div class="sub-h">Dónde dormir</div>` + (e.opts?.length ? `<div class="opts">${e.opts.slice(0, n).map((o, i) => optHTML(o, i, e, 'choice', idx)).join('')}</div>` : emptyStop(e, idx, 'lodge'));
-    h += `<div class="sub-h">Dónde cenar</div>` + (e.food?.length ? `<div class="opts">${e.food.slice(0, Math.min(n, 3)).map((o, i) => optHTML(o, i, e, 'foodChoice', idx)).join('')}</div>` : emptyStop(e, idx, 'food'));
+    let h = (e.type === 'night' ? `<button class="btn sm" data-swap="${idx}" style="margin-top:6px">Cambiar ciudad (dormir antes o después)</button>` : '') + `<div class="sub-h">Dónde dormir</div>` + showList(e, idx, 'choice', 'lodge', n);
+    h += `<div class="sub-h">Dónde cenar</div>` + showList(e, idx, 'foodChoice', 'food', Math.min(n, 3));
     return h;
   }
   return '';
@@ -1219,18 +1337,20 @@ function bindStops(root){
   root.querySelectorAll('[data-o]').forEach(b => b.onclick = () => openPlace(OPTS[b.dataset.o]));
   root.querySelectorAll('.pick').forEach(b => b.onclick = () => choose(+b.dataset.ev, b.dataset.f, +b.dataset.i));
   root.querySelectorAll('[data-retry]').forEach(b => b.onclick = () => retryStop(+b.dataset.retry));
+  root.querySelectorAll('[data-swap]').forEach(b => b.onclick = () => openSwapNight(+b.dataset.swap));
+  root.querySelectorAll('[data-add]').forEach(b => b.onclick = () => openCustomPlace(+b.dataset.add, b.dataset.f, b.dataset.k));
 }
 function renderStopsCard(){
   const el = $('#stops-card');
   if(!PLAN?.events){ el.hidden = true; return; }
   el.hidden = false;
-  let html = `<h2>Dónde parar</h2><p class="small muted" style="margin:0">Recomendado para el estilo <b>${STYLES[S.prefs.style].label}</b>. Tocá un lugar para ver fotos y precios, o “Elegir” para cambiarlo. El presupuesto se ajusta solo.</p>`, day = 0;
+  let html = `<h2>Dónde parar</h2><p class="small muted" style="margin:0">Recomendado para el estilo <b>${STYLES[S.prefs.style].label}</b>, con paradas a ritmo <b>${({rapido:'rápido', normal:'normal', tranquilo:'tranquilo'})[S.prefs.pace || STYLE_PACE[S.prefs.style]]}</b>. Cada parada dice cuánto quedarte y a qué hora salir. Tocá un lugar para ver fotos y precios, o “Elegir” para cambiarlo.</p>`, day = 0;
   PLAN.events.forEach((e, idx) => {
-    if(!['snack', 'lunch', 'night', 'end'].includes(e.type)) return;
-    if(e.day !== day){ day = e.day; html += `<h3 class="day-mini">Día ${day} <span class="muted small" style="font-family:var(--f-body);text-transform:none;font-weight:500">${dayName(new Date(e.eta))}</span></h3>`; }
+    if(!['snack', 'lunch', 'night', 'end', 'fuel', 'border'].includes(e.type)) return;
+    if(e.day !== day){ day = e.day; html += `<h3 class="day-mini">Día ${day} <span class="muted small" style="font-family:var(--f-body);text-transform:none;font-weight:500">${dayName(new Date(e.eta))}</span></h3>${dayStatLine(day)}`; }
     const [g, cls, lbl] = TYPE[e.type];
-    html += `<div class="stop"><div class="stop-h"><span class="pin-mini ${cls}">${g}</span><span class="num" style="font-family:var(--f-mono);font-size:13px;font-weight:500;color:var(--muted)">${hhmm(new Date(e.eta))}</span><span>${esc(e.type === 'end' ? 'Llegada a ' + e.title : e.title)}</span></div>
-      <div class="small muted">${lbl} · km ${Math.round(e.km)}${e.type === 'end' ? ' · ' + S.trip.stay + ' noches' : ''}</div>${stopOptions(e, idx, 3)}</div>`;
+    html += `<div class="stop"><div class="stop-h"><span class="pin-mini ${cls}">${g}</span><span class="num" style="font-family:var(--f-mono);font-size:13px;font-weight:500;color:var(--muted)">${hhmm(new Date(e.eta))}</span><span>${esc(e.type === 'end' ? 'Llegada a ' + e.title : e.type === 'fuel' ? 'Cargar combustible' : e.title)}</span></div>
+      <div class="small muted">${lbl} · km ${Math.round(e.km)}${e.type === 'end' ? ' · ' + S.trip.stay + ' noches' : ''}${e.type === 'fuel' && e.opts?.[0] ? ' · ' + esc(e.opts[0].name) : ''}</div>${dwellLine(e)}${e.type === 'fuel' || e.type === 'border' ? '' : stopOptions(e, idx, 3)}</div>`;
   });
   el.innerHTML = html; bindStops(el);
 }
@@ -1242,9 +1362,9 @@ function renderTimeline(){
   let html = '', curDay = 0, open = false;
   PLAN.events.forEach(e => {
     if(e.day !== curDay){ if(open) html += '</div></div>'; curDay = e.day; open = true;
-      html += `<div class="card"><div class="day-h"><h2>Día ${e.day}</h2><span class="muted small">${dayName(new Date(e.eta))}</span></div><div class="tl" style="margin-top:12px">`; }
+      html += `<div class="card"><div class="day-h"><h2>Día ${e.day}</h2><span class="muted small">${dayName(new Date(e.eta))}</span></div>${dayStatLine(e.day)}<div class="tl" style="margin-top:12px">`; }
     const [g, cls, lbl] = TYPE[e.type];
-    let body = `<h3>${esc(e.type === 'fuel' ? 'Cargar combustible' : e.title)}</h3><div class="small muted">${lbl} · km ${Math.round(e.km)}${e.elev ? ' · alt. ' + Math.round(e.elev) + ' m' : ''}</div>${wxHTML(e)}`;
+    let body = `<h3>${esc(e.type === 'fuel' ? 'Cargar combustible' : e.title)}</h3><div class="small muted">${lbl} · km ${Math.round(e.km)}${e.elev ? ' · alt. ' + Math.round(e.elev) + ' m' : ''}</div>${dwellLine(e)}${wxHTML(e)}`;
     if(e.type === 'border') body += `<div class="small" style="margin-top:6px">Documentos a mano: cédula o pasaporte, libreta del auto y seguro con Carta Verde.</div>`;
     body += stopOptions(e, PLAN.events.indexOf(e), 4);
     if(e.type === 'fuel' && !e.opts?.length) body += `<div class="small muted" style="margin-top:6px">No encontré estaciones cargadas en el mapa acá. Probá con Google Maps.</div>`;
@@ -1262,6 +1382,119 @@ function navLinks(ll, name){
   return `<div class="row" style="margin-top:8px;gap:6px"><a class="btn sm" target="_blank" rel="noopener" href="https://waze.com/ul?ll=${ll[1]},${ll[0]}&navigate=yes">Waze</a><a class="btn sm" target="_blank" rel="noopener" href="https://www.google.com/maps/dir/?api=1&destination=${ll[1]},${ll[0]}&travelmode=driving">Google Maps</a></div>`;
 }
 
+/* ============ lugares cargados por vos ============ */
+function openCustomPlace(idx, field, kind, editI = null){
+  const e = PLAN.events[idx]; if(!e) return; SFX.tap();
+  const arr = listFor(e, field), o = editI != null ? arr[editI] : null;
+  const unit = kind === 'lodge' ? 'por noche (la habitación)' : 'por persona';
+  const curDef = o?.cur || guessCurAt(e.km);
+  openSheet(`<h2>${o ? 'Editar' : 'Agregar'} ${kind === 'lodge' ? 'hotel' : 'lugar'}</h2>
+    <p class="small muted">${esc(e.title)} · km ${Math.round(e.km)}. El presupuesto usa el precio que pongas.</p>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <div class="field"><label for="cp-name">Nombre</label><input class="input" id="cp-name" value="${esc(o?.name || '')}" placeholder="${kind === 'lodge' ? 'Hotel o posada' : 'Restorán, café o parador'}"></div>
+      <div class="grid2"><div class="field"><label for="cp-price">Precio ${unit}</label><input class="input num" id="cp-price" type="number" step="any" inputmode="decimal" value="${o?.price ?? ''}"></div>
+        <div class="field"><label for="cp-cur">Moneda</label><select class="input" id="cp-cur">${['ARS','UYU','USD','CLP','BRL','EUR'].map(c => `<option ${c === curDef ? 'selected' : ''}>${c}</option>`).join('')}</select></div></div>
+      <div class="field"><label for="cp-note">Nota (dirección, teléfono, lo que quieras)</label><input class="input" id="cp-note" value="${esc(o?.note || '')}"></div>
+      <div class="row"><button class="btn primary grow" id="cp-save">${o ? 'Guardar cambios' : 'Agregar y elegir'}</button>${o ? '<button class="btn" id="cp-del">Borrar</button>' : ''}</div>
+    </div>`);
+  $('#cp-name').focus();
+  $('#cp-save').onclick = () => {
+    const name = $('#cp-name').value.trim(); if(!name){ toast('Poné un nombre'); return; }
+    const price = parseFloat($('#cp-price').value), cur = $('#cp-cur').value, usd = price > 0 ? conv(price, cur, 'USD') : null;
+    const item = {kind, custom:true, id:o?.id || 'c' + Date.now(), name, ll:o?.ll || e.ll, tags:{name, tourism:kind === 'lodge' ? 'hotel' : undefined, amenity:kind === 'lodge' ? undefined : 'restaurant'}, off:0,
+      price:price > 0 ? price : null, cur, note:$('#cp-note').value.trim(), est:usd ? [usd, usd] : null,
+      why:'Cargado por vos' + (price > 0 ? ' · ' + cur + ' ' + price.toLocaleString('es-UY') + ' ' + (kind === 'lodge' ? 'la noche' : 'por persona') : '') + ($('#cp-note').value.trim() ? ' · ' + $('#cp-note').value.trim() : '')};
+    if(o) arr[editI] = item; else arr.unshift(item);
+    e[field] = o ? editI : 0;
+    if(!o){ // los índices elegidos se corren al agregar adelante
+      const other = field === 'choice' ? 'foodChoice' : 'choice'; void other; }
+    computeCost(); savePlan(); renderAll(); closeSheet(); SFX.ok(); toast(o ? 'Cambios guardados' : 'Agregado y elegido');
+  };
+  $('#cp-del')?.addEventListener('click', () => {
+    if($('#cp-del').dataset.c !== '1'){ $('#cp-del').dataset.c = '1'; $('#cp-del').textContent = '¿Seguro?'; return; }
+    arr.splice(editI, 1); if((e[field] ?? 0) === editI) e[field] = undefined; else if((e[field] ?? 0) > editI) e[field]--;
+    computeCost(); savePlan(); renderAll(); closeSheet(); SFX.tap(); toast('Borrado');
+  });
+}
+function guessCurAt(km){ return ({AR:'ARS', UY:'UYU', CL:'CLP', BR:'BRL'})[countryAt(km)] || 'USD'; }
+
+/* ============ elegir ciudades para dormir ============ */
+async function townsAlong(){
+  if(PLAN.towns?.length && PLAN.townsFor === PLAN.sel) return PLAN.towns;
+  if(!G) G = buildGeo(PLAN.geoms[PLAN.sel]);
+  const pts = []; for(let k = 30; k < G.total - 20; k += 45) pts.push(ptAtKm(k));
+  const groups = []; for(let i = 0; i < pts.length; i += 6) groups.push(pts.slice(i, i + 6));
+  const res = await Promise.all(groups.map(g => photonPOI(g, ['place:city', 'place:town'], 15))); // 6 tramos en paralelo
+  const seen = new Set(); const els = res.flat().filter(t => { const k = t.type + t.id; if(seen.has(k)) return false; seen.add(k); return true; });
+  const list = els.filter(t => t.tags?.name && t.lat).map(t => { const k = kmOfPoint([t.lon, t.lat]);
+    return {name:t.tags.name, lat:t.lat, lon:t.lon, km:k.km, off:k.off, pop:parseInt((t.tags.population || '').replace(/\D/g, '')) || (t.tags.place === 'city' ? 60000 : 8000), city:t.tags.place === 'city'}; })
+    .filter(t => t.off < 15 && t.km > 60 && t.km < G.total - 40);
+  const buckets = {}; list.forEach(t => { const b = Math.floor(t.km / 35); if(!buckets[b] || buckets[b].pop < t.pop) buckets[b] = t; }); // la más grande cada 35 km
+  PLAN.towns = Object.values(buckets).sort((a, b) => a.km - b.km); PLAN.townsFor = PLAN.sel; savePlan();
+  return PLAN.towns;
+}
+async function openNightPicker(){
+  if(!PLAN?.events) return; SFX.tap();
+  const L = LEGI(), from = L.from.name.split(',')[0], to = L.to.name.split(',')[0];
+  openSheet(`<h2>¿Dónde dormimos?</h2><p class="small muted">${LEG === 'vuelta' ? 'Vuelta' : 'Ida'}: ${esc(from)} → ${esc(to)}. Buscando ciudades sobre la ruta… la primera vez tarda unos 20 segundos.</p>`);
+  let towns = []; try{ towns = await townsAlong(); }catch{}
+  if(!towns.length){ $('#sheet-c').innerHTML = `<h2>¿Dónde dormimos?</h2><p>No pude cargar las ciudades del camino. Probá de nuevo con señal.</p>`; return; }
+  const cur = new Set(PLAN.events.filter(e => e.type === 'night').map(e => (e.town || '').toLowerCase()));
+  $('#sheet-c').innerHTML = `<h2>¿Dónde dormimos?</h2>
+    <p class="small muted" style="margin:0 0 8px">${LEG === 'vuelta' ? 'Vuelta' : 'Ida'}: ${esc(from)} → ${esc(to)}, ${fmtKm(PLAN.km)} y ${fmtH(PLAN.h)} de manejo. Marcá las ciudades donde querés hacer noche: abajo ves cuánto manejás cada día.</p>
+    <div id="nt-sum" class="alert info" style="margin-bottom:6px"></div>
+    <div>${towns.map((t, i) => `<label class="town" for="nt-${i}"><input type="checkbox" id="nt-${i}" data-i="${i}" ${cur.has(t.name.toLowerCase()) ? 'checked' : ''}>
+      <span><b>${esc(t.name)}</b>${t.city ? ' <span class="badge sky">ciudad</span>' : ''}<small>km ${Math.round(t.km)} · ${fmtH(t.km / PLAN.kmh)} de manejo desde ${esc(from)}</small></span>
+      <span class="num small muted">${hhmmAfter(t.km)}</span></label>`).join('')}</div>
+    <div class="actions" style="position:sticky;bottom:0;background:var(--surface);padding-top:10px"><button class="btn primary" id="nt-ok">Usar estas ciudades</button><button class="btn" id="nt-auto">Volver a automático</button></div>`;
+  const sumUp = () => {
+    const sel = towns.filter((t, i) => $('#nt-' + i).checked).map(t => t.km).sort((a, b) => a - b);
+    const cuts = [0, ...sel, PLAN.km];
+    const days = cuts.slice(1).map((k, i) => (k - cuts[i]) / PLAN.kmh);
+    $('#nt-sum').innerHTML = `<div>${days.map((h, i) => `Día ${i + 1}: <b style="color:${h > 11 ? 'var(--danger)' : 'inherit'}">${fmtH(h)}</b> de manejo`).join(' · ')}${days.some(h => h > 11) ? '<br>Hay jornadas de más de 11 h: conviene sumar otra ciudad o turnarse al volante.' : ''}</div>`;
+  };
+  $$('#sheet-c .town input').forEach(i => i.onchange = () => { SFX.tap(); sumUp(); }); sumUp();
+  $('#nt-ok').onclick = () => {
+    const sel = towns.filter((t, i) => $('#nt-' + i).checked).map(t => ({name:t.name, lat:t.lat, lon:t.lon}));
+    S.trip[L.key] = sel; S.prefs.nights = sel.length ? S.prefs.nights : '0'; save(); closeSheet();
+    replanStops(PLAN.sel, sel.length ? 'Listo, dormís en ' + sel.map(t => t.name).join(' y ') : 'Viaje de un tirón, sin noches en el camino');
+  };
+  $('#nt-auto').onclick = () => { S.trip[L.key] = []; S.prefs.nights = 'auto'; save(); closeSheet(); replanStops(PLAN.sel, 'Noches en automático'); };
+}
+async function openSwapNight(idx = null){
+  if(!PLAN?.events) return; SFX.tap();
+  const nights = PLAN.events.map((e, i) => ({e, i})).filter(x => x.e.type === 'night');
+  if(idx == null){ const here = LIVE.km ?? -1; idx = (nights.find(x => x.e.km > here) || nights[0])?.i ?? null; }
+  const ev = idx != null ? PLAN.events[idx] : null;
+  const live = LIVE.km != null, here = live ? LIVE.km : 0;
+  // desde dónde se cuenta: tu ubicación, o la noche anterior / la salida
+  const prevNight = ev ? [...nights].reverse().find(x => x.e.km < ev.km) : null;
+  const base = live ? here : (prevNight ? prevNight.e.km : 0);
+  const nextNight = ev ? nights.find(x => x.e.km > ev.km) : null;
+  const maxKm = nextNight ? nextNight.e.km - 40 : PLAN.km - 30;
+  openSheet(`<h2>Cambiar dónde dormir</h2><p class="small muted">Buscando ciudades por delante… la primera vez tarda unos 20 segundos.</p>`);
+  let towns = []; try{ towns = await townsAlong(); }catch{}
+  towns = towns.filter(t => t.km > base + 20 && t.km < maxKm);
+  const startTxt = live ? 'desde donde estás' : prevNight ? 'desde ' + prevNight.e.title.replace('Noche en ', '') : 'desde la salida';
+  const clock = live ? new Date() : new Date(prevNight ? prevNight.e.leave : (PLAN.dayStats?.[0]?.start || Date.now()));
+  const arrive = km => { const t = new Date(clock.getTime() + (km - base) / PLAN.kmh * 3600e3 * 1.12); return hhmm(t); };
+  if(!towns.length){ $('#sheet-c').innerHTML = `<h2>Cambiar dónde dormir</h2><p>No encontré ciudades en ese tramo. ${navigator.onLine ? '' : 'Parece que no hay señal.'}</p>`; return; }
+  $('#sheet-c').innerHTML = `<h2>Cambiar dónde dormir</h2>
+    <p class="small muted" style="margin:0 0 8px">${ev ? 'Hoy tenías planeado: <b>' + esc(ev.title.replace('Noche en ', '')) + '</b> (km ' + Math.round(ev.km) + '). ' : ''}Elegí otra ciudad, más cerca o más lejos. Horarios contados ${startTxt}.</p>
+    ${towns.map((t, i) => { const before = ev && t.km < ev.km; return `<button class="opt" style="margin-bottom:6px" data-t="${i}"><span class="opt-main" style="pointer-events:none"><span class="nm">${esc(t.name)} ${ev ? (Math.abs(t.km - ev.km) < 15 ? '<span class="badge">la planeada</span>' : before ? '<span class="badge amber">antes</span>' : '<span class="badge sky">después</span>') : ''}</span>
+      <span class="pr">${fmtH((t.km - base) / PLAN.kmh)}<br><span class="muted">llegás ~${arrive(t.km)}</span></span><span class="why">km ${Math.round(t.km)} · a ${fmtKm(t.km - base)} ${startTxt}</span></span></button>`; }).join('')}
+    <p class="small muted">Al elegir se recalculan los hoteles, la cena y las paradas siguientes (necesita señal, tarda un minuto).</p>`;
+  $$('#sheet-c [data-t]').forEach(b => b.onclick = () => {
+    const t = towns[+b.dataset.t], L = LEGI();
+    const list = nights.map(x => ({name:x.e.town || x.e.title.replace('Noche en ', ''), lat:x.e.ll[1], lon:x.e.ll[0], km:x.e.km}));
+    const k = ev ? list.findIndex(x => Math.abs(x.km - ev.km) < 1) : -1;
+    if(k >= 0) list[k] = {name:t.name, lat:t.lat, lon:t.lon, km:t.km}; else list.push({name:t.name, lat:t.lat, lon:t.lon, km:t.km});
+    S.trip[L.key] = list.sort((a, b) => a.km - b.km).map(({km, ...x}) => x); save(); closeSheet();
+    replanStops(PLAN.sel, 'Listo, esta noche dormís en ' + t.name);
+  });
+}
+function hhmmAfter(km){ const [hh, mi] = LEGI().time.split(':').map(Number); const t = new Date(2000, 0, 1, hh, mi); t.setMinutes(t.getMinutes() + Math.round(km / PLAN.kmh * 60 * 1.12)); return 'llegás ~' + hhmm(t); }
+
 /* ============ hoja de detalle con fotos reales ============ */
 function openSheet(html){ $('#sheet-c').innerHTML = html; $('#sheet').classList.add('on'); $('#sheet-bg').classList.add('on'); $('#sheet').scrollTop = 0; }
 function closeSheet(){ $('#sheet').classList.remove('on'); $('#sheet-bg').classList.remove('on'); }
@@ -1269,7 +1502,9 @@ $('#sheet-bg').onclick = closeSheet;
 let touchY = null; $('#sheet').addEventListener('touchstart', e => { if($('#sheet').scrollTop <= 0) touchY = e.touches[0].clientY; }, {passive:true});
 $('#sheet').addEventListener('touchend', e => { if(touchY != null && e.changedTouches[0].clientY - touchY > 90) closeSheet(); touchY = null; });
 async function openPlace(o){
-  if(!o) return; SFX.tap();
+  if(!o) return;
+  if(o.custom){ for(const [i, ev] of PLAN.events.entries()){ for(const f of ['choice', 'foodChoice']){ const arr = f === 'choice' ? ev.opts : ev.food; const j = arr?.findIndex(x => x.id === o.id) ?? -1; if(j >= 0){ openCustomPlace(i, f, o.kind, j); return; } } } }
+  SFX.tap();
   const isWiki = o.kind === 'wiki', name = o.name || o.title, ll = o.ll;
   const city = ll && PLAN?.cc ? (nearestCity(kmOfPoint(ll).km) || '') : '';
   const q = encodeURIComponent(name + ' ' + city);
@@ -1326,7 +1561,7 @@ function initMap(){
   tileLayer = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom:19, attribution:'© OpenStreetMap'}).addTo(map);
   map.getContainer().classList.toggle('dark-tiles', isDark());
   mkLayer = L.layerGroup().addTo(map);
-  map.setView([S.trip.from.lat, S.trip.from.lon], 6);
+  map.setView([LEGI().from.lat, LEGI().from.lon], 6);
   drawMap();
 }
 function drawMap(){
@@ -1361,14 +1596,16 @@ function renderLive(){
   const rem = LIVE.km != null ? PLAN.km - LIVE.km : null;
   el.innerHTML = `<div class="small muted">${LIVE.off > 5 ? '<span class="badge red">Fuera de la ruta planificada (' + LIVE.off.toFixed(0) + ' km)</span>' : rem != null ? 'Faltan ' + fmtKm(rem) + ' · ' + fmtH(rem / PLAN.kmh) : 'Buscando señal GPS…'}${LIVE.speed ? ' · ' + Math.round(LIVE.speed) + ' km/h' : ''}${LIVE.wx ? ' · ' + Math.round(LIVE.wx.t) + '° ' + WX(LIVE.wx.code)[0].toLowerCase() : ''}</div>
     ${nx ? `<div class="next" style="margin-top:4px">${esc(TYPE[nx.type][2])}: ${esc(nx.opts?.[nx.choice ?? 0]?.name || nx.title)}</div><div class="small muted">en ${fmtKm(nx.km - (LIVE.km || 0))}</div>` : '<div class="next">Llegaste</div>'}
-    <div class="row" style="margin-top:10px;gap:6px">${nx ? `<a class="btn primary sm grow" target="_blank" rel="noopener" href="https://waze.com/ul?ll=${(nx.opts?.[nx.choice ?? 0]?.ll || nx.ll)[1]},${(nx.opts?.[nx.choice ?? 0]?.ll || nx.ll)[0]}&navigate=yes">Waze a la parada</a><a class="btn sm grow" target="_blank" rel="noopener" href="${gm}">Google Maps</a>` : ''}<button class="btn sm" id="stop-live">Parar</button></div>`;
-  $('#stop-live').onclick = stopLive;
+    <div class="row" style="margin-top:10px;gap:6px">${nx ? `<a class="btn primary sm grow" target="_blank" rel="noopener" href="https://waze.com/ul?ll=${(nx.opts?.[nx.choice ?? 0]?.ll || nx.ll)[1]},${(nx.opts?.[nx.choice ?? 0]?.ll || nx.ll)[0]}&navigate=yes">Waze a la parada</a><a class="btn sm grow" target="_blank" rel="noopener" href="${gm}">Google Maps</a>` : ''}<button class="btn sm" id="stop-live">Parar</button></div>
+    ${PLAN.events.some(e => e.type === 'night' && e.km > (LIVE.km ?? -1)) || nx ? `<button class="btn sm block" id="swap-live" style="margin-top:6px">Cambiar dónde dormir hoy</button>` : ''}`;
+  $('#stop-live').onclick = stopLive; $('#swap-live')?.addEventListener('click', () => openSwapNight());
 }
 function nextEvent(){ const k = LIVE.km ?? -1; return (PLAN.events || []).find(e => e.km > k + 0.5 && e.type !== 'start'); }
 function googleRouteURL(){
   if(!PLAN?.events) return '#';
   const stops = PLAN.events.filter(e => ['fuel','night','sight'].includes(e.type)).slice(0, 9).map(e => { const ll = e.opts?.[e.choice ?? 0]?.ll || e.ll; return ll[1].toFixed(5) + ',' + ll[0].toFixed(5); });
-  return `https://www.google.com/maps/dir/?api=1&origin=${S.trip.from.lat},${S.trip.from.lon}&destination=${S.trip.to.lat},${S.trip.to.lon}&travelmode=driving${stops.length ? '&waypoints=' + encodeURIComponent(stops.join('|')) : ''}`;
+  const L = LEGI();
+  return `https://www.google.com/maps/dir/?api=1&origin=${L.from.lat},${L.from.lon}&destination=${L.to.lat},${L.to.lon}&travelmode=driving${stops.length ? '&waypoints=' + encodeURIComponent(stops.join('|')) : ''}`;
 }
 async function startLive(){
   if(!('geolocation' in navigator)){ toast('Este navegador no tiene GPS'); return; }
@@ -1448,7 +1685,7 @@ function localIntent(q){
   // preguntas largas o con varios temas van a la IA, que tiene todo el contexto del viaje
   if(s.length > 48 && !QUICK.some(x => x.toLowerCase() === q.toLowerCase())) return null;
   if(/cuanto (llevo|gaste|gastamos|vamos)|presupuesto|gastos?$/.test(s)){
-    const tot = EXP.reduce((a, x) => a + expUSD(x), 0), est = PLAN?.cost?.total;
+    const tot = EXP.reduce((a, x) => a + expUSD(x), 0), est = COST()?.total;
     const by = {}; EXP.forEach(x => by[x.cat] = (by[x.cat] || 0) + expUSD(x));
     const top = Object.entries(by).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([k, v]) => `${CATS[k][0].toLowerCase()} ${moneyLbl(v)}`).join(', ');
     return `Llevás gastado ${moneyLbl(tot)}${top ? ' (' + top + ')' : ''}.${est ? ` El presupuesto estimado es ${moneyLbl(est)}: ${tot <= est ? 'te quedan ' + moneyLbl(est - tot) + '.' : 'te pasaste ' + moneyLbl(tot - est) + '.'}` : ''}`;
@@ -1474,6 +1711,13 @@ function localIntent(q){
     const eo = end?.opts?.[end.choice ?? 0];
     return (parts.length ? parts.join('. ') + '. ' : 'Llegás en el día, sin dormir en ruta. ') + (eo ? `En ${end.title} te recomiendo ${eo.name}, ${money(eo.est[0])}–${money(eo.est[1])} ${c} por noche.` : '') + ` Estilo ${STYLES[S.prefs.style].label}: cambialo en Viaje si querés algo más barato o más top.`;
   }
+  if(/(dormir|parar|quedarnos|hacer noche) (antes|despues|mas (cerca|lejos))|cambiar (donde|la) (dormir|noche)|estoy cansad|seguir manejando/.test(s)){ setTimeout(() => openSwapNight(), 400); return 'Dale, te muestro las ciudades que tenés por delante con la hora a la que llegarías a cada una. Elegí una y recalculo hotel y cena.'; }
+  if(/cuanto (tiempo|rato)|cuantos minutos|a que hora (salgo|sali|seguimos|arranco)|horario/.test(s)){
+    const nx = PLAN.events.find(e => e.km > (LIVE.km ?? -1) && (e.dwell || e.type === 'night'));
+    if(!nx) return 'No quedan paradas en el plan.';
+    return nx.type === 'night' ? `Llegás a ${nx.title.replace('Noche en ', '')} a las ${hhmm(new Date(nx.eta))} y mañana salís a las ${hhmm(new Date(nx.leave))}.`
+      : `En la próxima parada (${TYPE[nx.type][2].toLowerCase()}, ${nx.opts?.[nx.choice ?? 0]?.name || nx.title}) quedate ${nx.dwell} minutos: llegás ${hhmm(new Date(nx.eta))} y salís ${hhmm(new Date(nx.leave))}.${nx.combo === 'fuel' ? ' Aprovechá a cargar combustible ahí.' : ''}`;
+  }
   if(/refrigerio|merienda|cafe|cafecito|mate|descanso|parar un rato|estirar/.test(s)){
     const l = PLAN.events.filter(e => e.type === 'snack' && e.km > (LIVE.km ?? -1));
     if(!l.length) return 'No quedan paradas de refrigerio planificadas. Cualquier estación YPF, Shell o Axion grande tiene café y baño.';
@@ -1498,7 +1742,7 @@ function localIntent(q){
 function tripContext(){
   if(!PLAN?.events) return {viaje:S.trip.from.name + ' a ' + S.trip.to.name, plan:'sin calcular'};
   return {
-    origen:S.trip.from.name, destino:S.trip.to.name, salida:S.trip.date + ' ' + S.trip.time, estilo:STYLES[S.prefs.style].label, personas:S.prefs.people, nochesEnDestino:S.trip.stay,
+    tramoQueEstaMirando:LEG, origen:LEGI().from.name, destino:LEGI().to.name, salida:LEGI().date + ' ' + LEGI().time, fechaVuelta:S.trip.round ? backDate() : null, estilo:STYLES[S.prefs.style].label, personas:S.prefs.people, nochesEnDestino:S.trip.stay,
     km:Math.round(PLAN.km), horasManejo:+PLAN.h.toFixed(1), ruta:PLAN.routes[PLAN.sel].via, auto:{vehiculo:carName(), consumo:S.car.cons, tanque:S.car.tank, combustible:S.car.fuel},
     paradas:PLAN.events.map(e => ({tipo:TYPE[e.type][2], km:Math.round(e.km), hora:new Date(e.eta).toLocaleString('es-UY'), lugar:e.title, eleccion:e.opts?.[e.choice ?? 0]?.name, clima:e.wx ? WX(e.wx.code)[0] + ' ' + Math.round(e.wx.t) + '°' : undefined})),
     presupuestoUSD:Math.round(PLAN.cost?.total || 0), gastadoUSD:Math.round(EXP.reduce((a, x) => a + expUSD(x), 0)),
@@ -1668,35 +1912,37 @@ function renderVias(){
 }
 $('#add-via').onclick = () => { S.trip.vias.push({name:''}); save(); renderVias(); $('#via-' + (S.trip.vias.length - 1)).focus(); SFX.tap(); };
 function fillForm(){
-  $('#f-from').value = S.trip.from.name; $('#f-to').value = S.trip.to.name; $('#f-date').value = S.trip.date; $('#f-time').value = S.trip.time;
+  $('#f-from').value = S.trip.from.name; $('#f-to').value = S.trip.to.name; $('#f-date').value = LEGI().date; $('#f-time').value = LEGI().time; $('#f-date-l').textContent = LEG === 'vuelta' ? 'Salida de la vuelta' : 'Salida';
   $('#f-stay').value = S.trip.stay; $('#f-people').value = S.prefs.people; $('#f-round').checked = S.trip.round;
   $('#f-cons').value = S.car.cons; $('#f-tank').value = S.car.tank; $('#f-fuel').value = S.car.fuel; $('#f-hours').value = S.prefs.hours; $('#f-reserve').value = S.car.reserve;
-  $('#f-key').value = S.apiKey || ''; $('#cur').value = S.prefs.cur;
+  $('#f-key').value = S.apiKey || ''; $('#cur').value = S.prefs.cur; $('#f-pace').value = S.prefs.pace || STYLE_PACE[S.prefs.style];
   $$('#styles .style-opt').forEach(b => b.setAttribute('aria-pressed', b.dataset.s === S.prefs.style));
 }
 function readForm(){
   const n = (id, d) => { const v = parseFloat($(id).value); return isFinite(v) ? v : d; };
-  S.trip.date = $('#f-date').value || S.trip.date; S.trip.time = $('#f-time').value || '06:00';
+  if(LEG === 'ida'){ S.trip.date = $('#f-date').value || S.trip.date; S.trip.time = $('#f-time').value || '06:00'; }
+  else{ const d = $('#f-date').value; if(d && d !== backDate()) S.trip.backDate = d; const t = $('#f-time').value; if(t && t !== S.trip.time) S.trip.backTime = t; }
   S.trip.stay = Math.max(0, Math.round(n('#f-stay', 0))); S.prefs.people = Math.max(1, Math.round(n('#f-people', 1))); S.trip.round = $('#f-round').checked;
   S.car.cons = n('#f-cons', 9); S.car.tank = n('#f-tank', 50); S.car.fuel = $('#f-fuel').value; S.prefs.hours = Math.min(14, Math.max(3, n('#f-hours', 8))); S.car.reserve = Math.min(50, Math.max(10, n('#f-reserve', 25)));
   S.apiKey = $('#f-key').value.trim();
   save();
 }
-attachAC($('#f-from'), r => { S.trip.from = r; save(); renderHero(); });
-attachAC($('#f-to'), r => { S.trip.to = r; save(); renderHero(); });
+attachAC($('#f-from'), r => { S.trip.from = r; S.trip.onIda = []; S.trip.onVuelta = []; PLANS.vuelta = null; save(); renderHero(); });
+attachAC($('#f-to'), r => { S.trip.to = r; S.trip.onIda = []; S.trip.onVuelta = []; PLANS.vuelta = null; save(); renderHero(); });
 $('#calc').onclick = planTrip;
+$('#f-round').addEventListener('change', () => { if(!$('#f-round').checked && LEG === 'vuelta') switchLeg('ida'); renderLegs(); });
 $$('#styles .style-opt').forEach(b => b.onclick = async () => {
   const s = b.dataset.s; if(s === S.prefs.style) return;
-  S.prefs.style = s; S.prefs.hours = STYLES[s].hours; $('#f-hours').value = S.prefs.hours; save(); fillForm(); renderNights(); SFX.ok();
+  S.prefs.style = s; S.prefs.hours = STYLES[s].hours; S.prefs.pace = STYLE_PACE[s]; $('#f-hours').value = S.prefs.hours; save(); fillForm(); renderNights(); SFX.ok();
   toast(`Estilo ${STYLES[s].label}: ${STYLES[s].desc}`);
   if(PLAN?.events && !planning){ // re-elige hoteles/comida con el nuevo estilo sin pedir todo de nuevo
-    rerankForStyle(); computeCost(); savePlan(); renderAll();
+    for(const l of ['ida', 'vuelta']) if(PLANS[l]?.events){ const kP = PLAN; PLAN = PLANS[l]; rerankForStyle(); PLAN = kP; } retimeAll(); computeCost(); savePlan(); renderAll();
     say(`Cambié a estilo ${STYLES[s].label}. El nuevo estimado es ${spoken(PLAN.cost.total)}. Si querés que cambie también las horas de manejo por día, recalculá la ruta.`);
   }
 });
 function rerankForStyle(){
   const st = S.prefs.style;
-  const sc = (o, e) => o.kind === 'lodge' ? scoreLodge({tags:o.tags, _off:o.off}, st) : o.kind === 'food' ? scoreFood({tags:o.tags, _off:o.off}, st) : o.kind === 'snack' ? scoreSnack({tags:o.tags, _off:o.off}) : scoreFuel({tags:o.tags, _off:o.off, _km:e.km}, st, e.km);
+  const sc = (o, e) => o.custom ? 1e4 : o.kind === 'lodge' ? scoreLodge({tags:o.tags, _off:o.off}, st) : o.kind === 'food' ? scoreFood({tags:o.tags, _off:o.off}, st) : o.kind === 'snack' ? scoreSnack({tags:o.tags, _off:o.off}) : scoreFuel({tags:o.tags, _off:o.off, _km:e.km}, st, e.km);
   for(const e of PLAN.events){
     const cc = countryAt(e.km);
     if(e.opts?.length){ e.choice = undefined; e.opts.sort((a, b) => sc(b, e) - sc(a, e));
@@ -1705,9 +1951,10 @@ function rerankForStyle(){
   }
   PLAN.style = st;
 }
-['#f-date', '#f-time'].forEach(id => $(id).addEventListener('change', () => { readForm(); if(PLAN?.events){ timeline(); savePlan(); renderAll(); } }));
+['#f-date', '#f-time'].forEach(id => $(id).addEventListener('change', () => { readForm(); retimeAll(); savePlan(); renderAll(); }));
 ['#f-stay', '#f-people', '#f-round', '#f-cons', '#f-tank', '#f-fuel'].forEach(id => $(id).addEventListener('change', () => { readForm(); if(['#f-cons', '#f-tank'].includes(id) && S.car.src){ S.car.src = 'dato cargado a mano'; save(); fillVehicle(); } if(PLAN?.events){ computeCost(); savePlan(); renderAll(); } }));
 $('#f-key').addEventListener('change', () => { readForm(); fillVehicle(); });
+$('#f-pace').addEventListener('change', () => { S.prefs.pace = $('#f-pace').value; save(); SFX.tap(); if(PLAN?.events){ retimeAll(); savePlan(); renderAll(); toast('Horarios recalculados'); } });
 $('#edit-prices').onclick = () => {
   const cs = Object.keys(S.prices);
   openSheet(`<h2>Precios de referencia</h2><p class="small muted">En dólares. Se usan para estimar cuando no hay precio en vivo. Cuando anotás una carga con litros, el precio del combustible se actualiza solo.</p>
@@ -1752,7 +1999,8 @@ function renderAll(){
 }
 
 /* ============ inicio ============ */
-renderSnd(); fillForm(); fillVehicle(); renderVias(); renderNights(); resetExpForm(); renderAll(); renderRates();
+renderSnd(); fillForm(); fillVehicle(); renderVias(); renderNights();
+if(PLANS.ida && !LS.get('bit.plans', null)) LS.set('bit.plans', PLANS); /* migra el formato viejo */ resetExpForm(); retimeAll(); try{ computeCost(); }catch{} renderAll(); renderRates();
 loadRates(); setInterval(() => loadRates(), 30 * 60e3);
 try{ const t = sessionStorage.getItem('bit.tab'); if(t) go(t); }catch{}
 if(!PLAN) planTrip(); // primera vez: arma el viaje precargado
