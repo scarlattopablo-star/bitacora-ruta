@@ -163,9 +163,18 @@ details.more[open] summary{margin-bottom:10px}
 .ev .pin span{position:relative;z-index:1;margin-top:8px;width:28px;height:28px;border-radius:8px;display:grid;place-items:center;color:#fff;font-family:var(--f-display);font-weight:700;font-size:15px}
 .ev .body{padding:8px 0 14px;min-width:0}
 .ev .body h3{font-size:19px;font-weight:600;font-family:var(--f-display);letter-spacing:.02em}
-.c-start{background:var(--sign)} .c-fuel{background:var(--amber)} .c-lunch{background:#b5562f} .c-night{background:#4b4f9e} .c-border{background:#6b6b6b} .c-end{background:var(--danger)} .c-sight{background:var(--sky)}
+.c-start{background:var(--sign)} .c-fuel{background:var(--amber)} .c-lunch{background:#b5562f} .c-snack{background:#8a6d3b} .c-night{background:#4b4f9e} .c-border{background:#6b6b6b} .c-end{background:var(--danger)} .c-sight{background:var(--sky)}
 .opts{display:flex;flex-direction:column;gap:6px;margin-top:8px}
-.opt{display:grid;grid-template-columns:1fr auto;gap:2px 10px;border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:10px 12px;text-align:left;width:100%}
+.opt{display:grid;grid-template-columns:1fr auto;align-items:center;border:1px solid var(--line);background:var(--surface);border-radius:10px;width:100%;min-width:0}
+.opt-main{display:grid;grid-template-columns:1fr auto;gap:2px 10px;border:0;background:none;padding:10px 12px;text-align:left;min-width:0;color:inherit}
+.pick{margin-right:8px;height:34px;border-radius:9px;border:1px solid var(--line);background:var(--surface-2);font-size:12px;font-weight:700;padding:0 10px;white-space:nowrap}
+.pick[aria-pressed="true"]{background:var(--sign);color:var(--sign-ink);border-color:var(--sign)}
+.sub-h{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:12px 0 -2px}
+.stop{padding:12px 0;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:2px}
+.stop:first-of-type{border-top:0}
+.stop-h{display:flex;align-items:center;gap:8px;font-family:var(--f-display);font-size:19px;font-weight:600}
+.pin-mini{width:24px;height:24px;border-radius:7px;display:grid;place-items:center;color:#fff;font:700 13px var(--f-display);flex:none}
+.day-mini{font-size:20px;text-transform:uppercase;margin-top:14px}
 .opt.rec{border-color:var(--sign);box-shadow:inset 3px 0 0 var(--sign)}
 .opt .nm{font-weight:600;min-width:0;overflow:hidden;text-overflow:ellipsis}
 .opt .pr{font-family:var(--f-mono);font-size:13px;text-align:right;white-space:nowrap}
@@ -307,6 +316,22 @@ details.more[open] summary{margin-bottom:10px}
           <details class="more">
             <summary>Auto y preferencias ›</summary>
             <div style="display:flex;flex-direction:column;gap:10px">
+              <div class="sub-h" style="margin-top:0">Tu vehículo</div>
+              <div class="grid2">
+                <div class="field"><label for="v-brand">Marca</label><select class="input" id="v-brand"></select></div>
+                <div class="field"><label for="v-model">Modelo</label><select class="input" id="v-model"></select></div>
+              </div>
+              <div class="grid2" id="v-other" hidden>
+                <div class="field"><label for="v-name">Marca y modelo</label><input class="input" id="v-name" placeholder="Ej: Mercedes GLA"></div>
+                <div class="field"><label for="v-type">Tipo</label><select class="input" id="v-type"><option value="auto">Auto / hatch / sedán</option><option value="suv">SUV / crossover</option><option value="pickup">Pickup</option><option value="van">Utilitario / van</option></select></div>
+              </div>
+              <div class="grid3">
+                <div class="field"><label for="v-engine">Motor</label><select class="input" id="v-engine"></select></div>
+                <div class="field" id="v-cc-w"><label for="v-cc">Cilindrada (L)</label><input class="input" id="v-cc" type="number" step="0.1" min="0.8" max="7" placeholder="1.6"></div>
+                <div class="field"><label for="v-year">Año</label><input class="input" id="v-year" type="number" min="1970" max="2027" placeholder="2018"></div>
+              </div>
+              <div class="alert info" id="v-info" style="margin:0"></div>
+              <button class="btn sm" id="v-search" style="align-self:flex-start" hidden>Buscar ficha técnica en internet</button>
               <div class="grid3">
                 <div class="field"><label for="f-cons">L/100 km</label><input class="input" type="number" step="0.1" id="f-cons"></div>
                 <div class="field"><label for="f-tank">Tanque (L)</label><input class="input" type="number" id="f-tank"></div>
@@ -317,7 +342,7 @@ details.more[open] summary{margin-bottom:10px}
                 <div class="field"><label for="f-reserve">Reserva de tanque (%)</label><input class="input" type="number" min="10" max="50" id="f-reserve"></div>
               </div>
               <div class="field"><label for="f-key">Clave de Claude (opcional, para preguntas libres y precios de internet)</label><input class="input" id="f-key" type="password" autocomplete="off" placeholder="sk-ant-…"></div>
-              <p class="small muted" style="margin:0">La clave queda guardada solo en este celular. Sin clave, el asistente igual responde sobre tu viaje, gastos, clima y paradas.</p>
+              <p class="small muted" style="margin:0">Sin clave, el asistente usa una IA gratuita (Pollinations) que responde con los datos de tu viaje. Tus preguntas y el resumen del viaje se envían a ese servicio. Con clave de Claude, además busca en internet. La clave queda guardada solo en este celular.</p>
               <button class="btn sm" id="edit-prices" style="align-self:flex-start">Editar precios de referencia</button>
             </div>
           </details>
@@ -327,6 +352,7 @@ details.more[open] summary{margin-bottom:10px}
 
       <div class="card" id="progress" hidden><h2>Armando tu viaje</h2><div class="steps" id="steps"></div></div>
       <div class="card" id="routes-card" hidden><h2>Rutas posibles</h2><div class="routes" id="routes"></div></div>
+      <div class="card" id="stops-card" hidden></div>
       <div class="card" id="cost-card" hidden></div>
       <div class="card" id="alerts-card" hidden><h2>Clima y cuidados</h2><div id="alerts" style="display:flex;flex-direction:column;gap:8px"></div></div>
     </section>
@@ -544,7 +570,8 @@ async function geocode(q){
 }
 async function reverse(lat, lon){
   try{ const d = await getJSON(`https://photon.komoot.io/reverse?lat=${lat}&lon=${lon}`, {}, 12000); const p = d.features[0]?.properties || {};
-    return {cc:(p.countrycode || '').toUpperCase(), city:p.city || p.town || p.village || p.county || p.name || '', state:p.state || ''}; }catch{ return null; }
+    const clean = x => (x || '').replace(/^(Junta de Gobierno de|Municipio de|Comuna de|Distrito|Pedanía|Departamento|Partido de|Sección)\s+/i, '').replace(/\s+(al Sur|al Norte|Sud|Norte)$/i, '');
+    return {cc:(p.countrycode || '').toUpperCase(), city:clean(p.city || p.town || p.village || p.county || p.name), state:p.state || ''}; }catch{ return null; }
 }
 function attachAC(input, onPick){
   let list = null, t = null;
@@ -794,42 +821,18 @@ async function buildPlanFor(sel, set = () => {}){
   ev.push(...fuels);
   set(2, 'ok');
 
-  // 5. comida y alojamiento
+  // 5. comida, refrigerios y alojamiento
   set(3, 'run');
-  for(const e of ev.filter(e => e.type === 'lunch')){
-    try{
-      const poly = samplePoly(Math.max(0, e.km - 45), Math.min(G.total, e.km + 45), 12);
-      const els = await findPOI(`[out:json][timeout:25];nwr[amenity~"^(restaurant|fast_food|cafe)$"][name](around:2500,${polyStr(poly)});out center tags 80;`, [ptAtKm(e.km - 30), ptAtKm(e.km), ptAtKm(e.km + 30)], FOOD_TAGS, 4);
-      const cc = countryAt(e.km);
-      const c = els.map(x => { const ll = elLL(x); const k = kmOfPoint(ll, e.km - 50, e.km + 50); return {...x, ll, _km:k.km, _off:k.off}; }).filter(x => x._off < 5);
-      c.forEach(x => x._s = scoreFood(x, style) - Math.abs(x._km - e.km) / 15); c.sort((x, y) => y._s - x._s);
-      e.opts = c.slice(0, 5).map(x => ({kind:'food', id:x.type + x.id, name:x.tags.name, ll:x.ll, tags:x.tags, off:x._off, est:estMeal(x.tags, cc), why:whyFood(x)}));
-      if(e.opts[0]){ e.km = kmOfPoint(e.opts[0].ll, e.km - 50, e.km + 50).km; e.ll = e.opts[0].ll; } else e.ll = ptAtKm(e.km);
-      const city = nearestCity(e.km); if(city) e.title = 'Almuerzo · ' + city;
-    }catch{ e.opts = []; e.ll = ptAtKm(e.km); }
-    await sleep(300);
-  }
-  for(const e of ev.filter(e => e.type === 'night')){
-    try{
-      const poly = samplePoly(Math.max(0, e.km - 130), Math.min(G.total, e.km + 25), 14);
-      const towns = await findPOI(`[out:json][timeout:25];node[place~"^(city|town)$"](around:12000,${polyStr(poly)});out 40;`, [ptAtKm(e.km - 110), ptAtKm(e.km - 70), ptAtKm(e.km - 35), ptAtKm(e.km), ptAtKm(e.km + 20)], ['place:city', 'place:town'], 20);
-      const tw = towns.filter(t => t.tags.name).map(t => { const ll = [t.lon, t.lat]; const k = kmOfPoint(ll, e.km - 135, e.km + 30); const pop = parseInt((t.tags.population || '').replace(/\D/g, '')) || (t.tags.place === 'city' ? 60000 : 8000);
-        return {name:t.tags.name, ll, km:k.km, off:k.off, pop, s:Math.log10(pop) * 12 - Math.abs(k.km - e.km) / 6 - k.off}; }).sort((a, b) => b.s - a.s);
-      const town = tw[0];
-      if(town){ e.km = town.km; e.ll = town.ll; e.title = 'Noche en ' + town.name; e.town = town.name; } else e.ll = ptAtKm(e.km);
-      e.opts = await lodgingNear(e.ll, countryAt(e.km), style);
-    }catch{ e.opts = []; e.ll = e.ll || ptAtKm(e.km); }
-    await sleep(300);
-  }
-  // destino: dónde dormir y comer
+  // refrigerio cada ~2 h 30 de manejo, lejos del almuerzo y de la noche
+  dayStarts.forEach((s0, i) => { const e1 = nights[i] ?? G.total;
+    for(let k = s0 + 2.5 * kmh; k < e1 - 1.2 * kmh; k += 2.5 * kmh){
+      if(ev.some(x => x.type === 'lunch' && Math.abs(x.km - k) < 1.3 * kmh)) continue;
+      ev.push({type:'snack', km:k, title:'Refrigerio'}); } });
+  for(const e of ev.filter(e => e.type === 'lunch' || e.type === 'snack')){ await stopAlong(e, style); await sleep(250); }
+  for(const e of ev.filter(e => e.type === 'night')){ await nightStop(e, style); await sleep(250); }
   const end = ev.find(e => e.type === 'end');
-  try{ end.opts = await lodgingNear(end.ll, countryAt(G.total), style, 8000); }catch{ end.opts = []; }
-  try{
-    const els = await findPOI(`[out:json][timeout:25];nwr[amenity~"^(restaurant|fast_food|cafe)$"][name](around:6000,${end.ll[1]},${end.ll[0]});out center tags 60;`, [end.ll], FOOD_TAGS, 6);
-    const cc = countryAt(G.total);
-    const c = els.map(x => ({...x, ll:elLL(x), _off:hav(elLL(x), end.ll)})); c.forEach(x => x._s = scoreFood(x, style)); c.sort((x, y) => y._s - x._s);
-    end.food = c.slice(0, 6).map(x => ({kind:'food', id:x.type + x.id, name:x.tags.name, ll:x.ll, tags:x.tags, off:x._off, est:estMeal(x.tags, cc), why:whyFood(x).replace(/a [\d.]+ km$/, 'a ' + x._off.toFixed(1) + ' km del centro')}));
-  }catch{ end.food = []; }
+  end.opts = await lodgingNear(end.ll, countryAt(G.total), style, 8000).catch(() => []);
+  end.food = await foodNear(end.ll, countryAt(G.total), style, 6000);
   set(3, 'ok');
 
   ev.sort((a, b) => a.km - b.km);
@@ -848,6 +851,56 @@ async function buildPlanFor(sel, set = () => {}){
   savePlan();
   renderAll();
 }
+async function stopAlong(e, style){
+  const snack = e.type === 'snack', win = snack ? 30 : 45;
+  try{
+    const poly = samplePoly(Math.max(0, e.km - win), Math.min(G.total, e.km + win), 10);
+    const re = snack ? 'cafe|fast_food|fuel' : 'restaurant|fast_food|cafe';
+    const els = await findPOI(`[out:json][timeout:25];nwr[amenity~"^(${re})$"][name](around:2500,${polyStr(poly)});out center tags 80;`,
+      [ptAtKm(e.km - win * .6), ptAtKm(e.km), ptAtKm(e.km + win * .6)], snack ? ['amenity:cafe', 'amenity:fast_food', 'amenity:fuel'] : FOOD_TAGS, 4);
+    const cc = countryAt(e.km);
+    const c = els.map(x => { const ll = elLL(x); const k = kmOfPoint(ll, e.km - win - 5, e.km + win + 5); return {...x, ll, _km:k.km, _off:k.off}; })
+      .filter(x => x._off < 5 && x.tags.name && (x.tags.amenity !== 'fuel' || BIG_FUEL.test(x.tags.brand || x.tags.name)));
+    c.forEach(x => x._s = (snack ? scoreSnack(x) : scoreFood(x, style)) - Math.abs(x._km - e.km) / 15); c.sort((x, y) => y._s - x._s);
+    e.opts = c.slice(0, 5).map(x => ({kind:snack ? 'snack' : 'food', id:x.type + x.id, name:x.tags.name, ll:x.ll, tags:x.tags, off:x._off, est:snack ? estSnack(x.tags, cc) : estMeal(x.tags, cc), why:snack ? whySnack(x) : whyFood(x)}));
+    e.choice = undefined;
+    if(e.opts[0]){ e.km = kmOfPoint(e.opts[0].ll, e.km - win - 5, e.km + win + 5).km; e.ll = e.opts[0].ll; } else e.ll = ptAtKm(e.km);
+    const city = nearestCity(e.km); e.title = (snack ? 'Refrigerio' : 'Almuerzo') + (city ? ' · ' + city : '');
+  }catch{ e.opts = e.opts || []; e.ll = e.ll || ptAtKm(e.km); }
+}
+async function nightStop(e, style){
+  try{
+    if(!e.town){
+      const poly = samplePoly(Math.max(0, e.km - 130), Math.min(G.total, e.km + 25), 14);
+      const towns = await findPOI(`[out:json][timeout:25];node[place~"^(city|town)$"](around:12000,${polyStr(poly)});out 40;`, [ptAtKm(e.km - 110), ptAtKm(e.km - 70), ptAtKm(e.km - 35), ptAtKm(e.km), ptAtKm(e.km + 20)], ['place:city', 'place:town'], 20);
+      const tw = towns.filter(t => t.tags.name).map(t => { const ll = [t.lon, t.lat]; const k = kmOfPoint(ll, e.km - 135, e.km + 30); const pop = parseInt((t.tags.population || '').replace(/\D/g, '')) || (t.tags.place === 'city' ? 60000 : 8000);
+        return {name:t.tags.name, ll, km:k.km, off:k.off, pop, s:Math.log10(pop) * 12 - Math.abs(k.km - e.km) / 6 - k.off}; }).sort((a, b) => b.s - a.s);
+      const town = tw[0];
+      if(town){ e.km = town.km; e.ll = town.ll; e.title = 'Noche en ' + town.name; e.town = town.name; } else e.ll = ptAtKm(e.km);
+    }
+    e.opts = await lodgingNear(e.ll, countryAt(e.km), style); e.choice = undefined;
+  }catch{ e.opts = e.opts || []; e.ll = e.ll || ptAtKm(e.km); }
+  e.food = await foodNear(e.ll, countryAt(e.km), style, 3500); e.foodChoice = undefined;
+}
+async function foodNear(ll, cc, style, r){
+  try{
+    const els = await findPOI(`[out:json][timeout:25];nwr[amenity~"^(restaurant|fast_food|cafe)$"][name](around:${r},${ll[1]},${ll[0]});out center tags 60;`, [ll], FOOD_TAGS, r / 1000);
+    const c = els.filter(x => x.tags.name).map(x => ({...x, ll:elLL(x), _off:hav(elLL(x), ll)})); c.forEach(x => x._s = scoreFood(x, style)); c.sort((x, y) => y._s - x._s);
+    return c.slice(0, 6).map(x => ({kind:'food', id:x.type + x.id, name:x.tags.name, ll:x.ll, tags:x.tags, off:x._off, est:estMeal(x.tags, cc), why:whyFood(x).replace(/(sobre la ruta|a [\d.]+ km)$/, x._off < .4 ? 'en el centro' : 'a ' + x._off.toFixed(1) + ' km del centro')}));
+  }catch{ return []; }
+}
+function scoreSnack(e){ const a = e.tags.amenity, big = BIG_FUEL.test(e.tags.brand || e.tags.name || ''); return (a === 'cafe' ? 22 : a === 'fuel' && big ? 24 : a === 'fast_food' ? 16 : 8) - e._off * 6; }
+function estSnack(tags, cc){ const m = P(cc).meal; const b = tags.amenity === 'fast_food' ? m.eco * .7 : m.eco * .45; return [b * .8, b * 1.25]; }
+function whySnack(e){ const a = e.tags.amenity; return [a === 'fuel' ? 'Estación con tienda y café' : a === 'cafe' ? 'Café / confitería' : 'Comida rápida / parador', e._off < .5 ? 'sobre la ruta' : 'a ' + e._off.toFixed(1) + ' km'].join(' · '); }
+async function retryStop(idx){
+  const e = PLAN.events[idx]; if(!e || planning) return; SFX.tap(); toast('Buscando de nuevo…'); OVP_FAIL = 0;
+  if(e.type === 'lunch' || e.type === 'snack') await stopAlong(e, S.prefs.style);
+  else if(e.type === 'night') await nightStop(e, S.prefs.style);
+  else if(e.type === 'end'){ e.opts = await lodgingNear(e.ll, countryAt(e.km), S.prefs.style, 8000).catch(() => []); e.food = await foodNear(e.ll, countryAt(e.km), S.prefs.style, 6000); }
+  PLAN.events.sort((a, b) => a.km - b.km); timeline(); computeCost(); savePlan(); renderAll();
+  const found = (e.opts?.length || 0) + (e.food?.length || 0); found ? SFX.ok() : SFX.alert(); toast(found ? 'Encontré ' + found + ' lugares' : 'Sigue sin datos acá: probá con Google Maps');
+}
+function choose(idx, field, i){ const e = PLAN.events[idx]; if(!e) return; e[field] = i; computeCost(); savePlan(); renderAll(); SFX.ok(); toast('Elegido. Presupuesto actualizado.'); }
 function nearestCity(km){ let best = null, bd = Infinity; for(const s of PLAN.cc || []){ const d = Math.abs(s.km - km); if(d < bd && s.city){ bd = d; best = s.city; } } return bd < 80 ? best : null; }
 async function lodgingNear(ll, cc, style, r = 7000){
   const els = await findPOI(`[out:json][timeout:25];nwr[tourism~"^(hotel|motel|guest_house|hostel|apartment|camp_site|chalet)$"][name](around:${r},${ll[1]},${ll[0]});out center tags 80;`, [ll], LODGE_TAGS, r / 1000);
@@ -860,7 +913,7 @@ function timeline(){
   if(!PLAN?.events) return;
   const [y, m, d] = S.trip.date.split('-').map(Number); const [hh, mi] = S.trip.time.split(':').map(Number);
   let t = new Date(y, m - 1, d, hh, mi); let prev = 0, day = 1;
-  const dwell = {fuel:.33, lunch:1, border:.75, sight:.75};
+  const dwell = {fuel:.33, snack:.33, lunch:1, border:.75, sight:.75};
   for(const e of PLAN.events){
     t = new Date(t.getTime() + (e.km - prev) / PLAN.kmh * 3600e3); prev = e.km;
     e.eta = t.getTime(); e.day = day;
@@ -983,10 +1036,11 @@ function computeCost(){
   let hotelRoad = 0; nights.forEach(e => hotelRoad += pick(e, P(countryAt(e.km)).hotel[style] * rooms));
   const end = PLAN.events.find(e => e.type === 'end'); const dcc = countryAt(G.total);
   const stayHotel = S.trip.stay * pick(end, P(dcc).hotel[style] * rooms);
-  let mealsRoad = 0; PLAN.events.filter(e => e.type === 'lunch').forEach(e => mealsRoad += pick(e, P(countryAt(e.km)).meal[style]) * people);
-  nights.forEach(e => mealsRoad += P(countryAt(e.km)).meal[style] * people + P(countryAt(e.km)).meal.eco * .5 * people);
-  mealsRoad += P(countryAt(0)).meal.eco * .5 * people; // desayuno/merienda en ruta
-  const stayMeals = S.trip.stay * people * (P(dcc).meal[style] * 2 + P(dcc).meal.eco * .5);
+  const pickF = (e, def) => { const o = e.food?.[e.foodChoice ?? 0]; return o?.est ? (o.est[0] + o.est[1]) / 2 : def; };
+  let mealsRoad = 0;
+  PLAN.events.filter(e => e.type === 'lunch' || e.type === 'snack').forEach(e => mealsRoad += pick(e, e.type === 'snack' ? P(countryAt(e.km)).meal.eco * .45 : P(countryAt(e.km)).meal[style]) * people);
+  nights.forEach(e => mealsRoad += pickF(e, P(countryAt(e.km)).meal[style]) * people + P(countryAt(e.km)).meal.eco * .5 * people); // cena + desayuno
+  const stayMeals = S.trip.stay * people * (P(dcc).meal[style] + pickF(end, P(dcc).meal[style]) + P(dcc).meal.eco * .5);
   const mult = S.trip.round ? 2 : 1;
   const cat = {
     combustible: fuel * mult + (S.trip.stay ? 80 / 100 * S.car.cons * P(dcc).fuel[S.car.fuel] * Math.min(S.trip.stay, 4) * .6 : 0),
@@ -1107,19 +1161,58 @@ function renderAlerts(){
 }
 
 /* ============ render: paradas ============ */
-const TYPE = {start:['S', 'c-start', 'Salida'], fuel:['C', 'c-fuel', 'Combustible'], lunch:['A', 'c-lunch', 'Almuerzo'], night:['N', 'c-night', 'Pernocte'], border:['F', 'c-border', 'Frontera'], end:['D', 'c-end', 'Llegada'], sight:['V', 'c-sight', 'Parada']};
+const TYPE = {start:['S', 'c-start', 'Salida'], fuel:['C', 'c-fuel', 'Combustible'], lunch:['A', 'c-lunch', 'Almuerzo'], snack:['R', 'c-snack', 'Refrigerio'], night:['N', 'c-night', 'Pernocte'], border:['F', 'c-border', 'Frontera'], end:['D', 'c-end', 'Llegada'], sight:['V', 'c-sight', 'Parada']};
 let OPTS = {}; // id -> opción, para abrir la hoja
-function optHTML(o, i, ev){
+function optHTML(o, i, ev, field = 'choice', idx = null){
   OPTS[o.id] = o;
-  const pr = o.est ? `${money(o.est[0])}–${money(o.est[1])}<br><span class="muted">${o.kind === 'food' ? 'por persona' : 'por noche'}</span>`
+  const unit = o.kind === 'lodge' ? 'por noche' : 'por persona';
+  const pr = o.est ? `${money(o.est[0])}–${money(o.est[1])}<br><span class="muted">${unit}</span>`
     : o.kind === 'fuel' && ev?.km != null ? `${money(P(countryAt(ev.km)).fuel[S.car.fuel], S.prefs.cur, {dec:2})}<br><span class="muted">el litro</span>` : '';
-  const rec = i === (ev?.choice ?? 0);
-  return `<button class="opt ${rec ? 'rec' : ''}" data-o="${esc(o.id)}"><span class="nm">${rec ? '<span class="badge" style="margin-right:6px">' + (ev?.choice != null ? 'Elegido' : 'Recomendado') + '</span>' : ''}${esc(o.name)}</span><span class="pr">${pr}</span><span class="why">${esc(o.why || '')}</span></button>`;
+  const sel = i === (ev?.[field] ?? 0), chosen = ev?.[field] != null;
+  const badge = idx == null && sel ? '<span class="badge" style="margin-right:6px">Recomendado</span>' : '';
+  const pick = idx != null ? `<button class="pick" data-ev="${idx}" data-f="${field}" data-i="${i}" aria-pressed="${sel}">${sel ? (chosen ? 'Elegido' : 'Recomendado') : 'Elegir'}</button>` : '';
+  return `<div class="opt ${sel ? 'rec' : ''}"><button class="opt-main" data-o="${esc(o.id)}"><span class="nm">${badge}${esc(o.name)}</span><span class="pr">${pr}</span><span class="why">${esc(o.why || '')}</span></button>${pick}</div>`;
+}
+function emptyStop(e, idx, what){
+  const ll = e.ll || [0, 0], q = {lodge:'hoteles', food:'restaurantes', snack:'café'}[what];
+  return `<div class="small muted" style="margin-top:6px">No encontré ${what === 'lodge' ? 'alojamientos' : 'lugares'} cargados en el mapa para este punto.</div>
+    <div class="row" style="gap:6px;margin-top:6px"><button class="btn sm" data-retry="${idx}">Buscar de nuevo</button>
+    <a class="btn sm" target="_blank" rel="noopener" href="https://www.google.com/maps/search/${encodeURIComponent(q)}/@${ll[1]},${ll[0]},13z">${q[0].toUpperCase() + q.slice(1)} en Google Maps</a>
+    ${what === 'lodge' && e.town ? `<a class="btn sm" target="_blank" rel="noopener" href="https://www.booking.com/searchresults.es.html?ss=${encodeURIComponent(e.town)}">Booking</a>` : ''}</div>`;
+}
+function stopOptions(e, idx, n = 4){
+  if(e.type === 'fuel') return e.opts?.length ? `<div class="opts">${e.opts.slice(0, 3).map((o, i) => optHTML(o, i, e)).join('')}</div>` : '';
+  if(e.type === 'lunch' || e.type === 'snack') return e.opts?.length ? `<div class="opts">${e.opts.slice(0, n).map((o, i) => optHTML(o, i, e, 'choice', idx)).join('')}</div>` : emptyStop(e, idx, e.type === 'snack' ? 'snack' : 'food');
+  if(e.type === 'night' || e.type === 'end'){
+    let h = `<div class="sub-h">Dónde dormir</div>` + (e.opts?.length ? `<div class="opts">${e.opts.slice(0, n).map((o, i) => optHTML(o, i, e, 'choice', idx)).join('')}</div>` : emptyStop(e, idx, 'lodge'));
+    h += `<div class="sub-h">Dónde cenar</div>` + (e.food?.length ? `<div class="opts">${e.food.slice(0, Math.min(n, 3)).map((o, i) => optHTML(o, i, e, 'foodChoice', idx)).join('')}</div>` : emptyStop(e, idx, 'food'));
+    return h;
+  }
+  return '';
+}
+function bindStops(root){
+  root.querySelectorAll('[data-o]').forEach(b => b.onclick = () => openPlace(OPTS[b.dataset.o]));
+  root.querySelectorAll('.pick').forEach(b => b.onclick = () => choose(+b.dataset.ev, b.dataset.f, +b.dataset.i));
+  root.querySelectorAll('[data-retry]').forEach(b => b.onclick = () => retryStop(+b.dataset.retry));
+}
+function renderStopsCard(){
+  const el = $('#stops-card');
+  if(!PLAN?.events){ el.hidden = true; return; }
+  el.hidden = false;
+  let html = `<h2>Dónde parar</h2><p class="small muted" style="margin:0">Recomendado para el estilo <b>${STYLES[S.prefs.style].label}</b>. Tocá un lugar para ver fotos y precios, o “Elegir” para cambiarlo. El presupuesto se ajusta solo.</p>`, day = 0;
+  PLAN.events.forEach((e, idx) => {
+    if(!['snack', 'lunch', 'night', 'end'].includes(e.type)) return;
+    if(e.day !== day){ day = e.day; html += `<h3 class="day-mini">Día ${day} <span class="muted small" style="font-family:var(--f-body);text-transform:none;font-weight:500">${dayName(new Date(e.eta))}</span></h3>`; }
+    const [g, cls, lbl] = TYPE[e.type];
+    html += `<div class="stop"><div class="stop-h"><span class="pin-mini ${cls}">${g}</span><span class="num" style="font-family:var(--f-mono);font-size:13px;font-weight:500;color:var(--muted)">${hhmm(new Date(e.eta))}</span><span>${esc(e.type === 'end' ? 'Llegada a ' + e.title : e.title)}</span></div>
+      <div class="small muted">${lbl} · km ${Math.round(e.km)}${e.type === 'end' ? ' · ' + S.trip.stay + ' noches' : ''}</div>${stopOptions(e, idx, 3)}</div>`;
+  });
+  el.innerHTML = html; bindStops(el);
 }
 function wxHTML(e){ if(!e.wx) return ''; const [lbl, ic] = WX(e.wx.code); return `<span class="wx">${wxIcon(ic)}${lbl} · ${Math.round(e.wx.t)}°${e.wx.g > 40 ? ' · ráfagas ' + Math.round(e.wx.g) : ''}${e.wx.p > .2 ? ' · ' + e.wx.p.toFixed(1) + ' mm' : ''}</span>`; }
 function placeCard(p){ OPTS['w:' + p.title] = p; return `<button class="place" data-o="${esc('w:' + p.title)}"><div class="ph" style="background-image:url('${esc(p.img || '')}')"></div><div class="tx"><b>${esc(p.title)}</b><small>${p.km != null ? 'km ' + Math.round(p.km) + ' de la ruta' : p.d != null ? 'a ' + p.d.toFixed(0) + ' km' : esc(p.desc || '')}</small></div></button>`; }
 function renderTimeline(){
-  const el = $('#timeline'); OPTS = {};
+  const el = $('#timeline');
   if(!PLAN?.events){ el.innerHTML = '<div class="card empty">Calculá una ruta en la pestaña Viaje y acá aparecen las paradas día por día.</div>'; return; }
   let html = '', curDay = 0, open = false;
   PLAN.events.forEach(e => {
@@ -1128,9 +1221,8 @@ function renderTimeline(){
     const [g, cls, lbl] = TYPE[e.type];
     let body = `<h3>${esc(e.type === 'fuel' ? 'Cargar combustible' : e.title)}</h3><div class="small muted">${lbl} · km ${Math.round(e.km)}${e.elev ? ' · alt. ' + Math.round(e.elev) + ' m' : ''}</div>${wxHTML(e)}`;
     if(e.type === 'border') body += `<div class="small" style="margin-top:6px">Documentos a mano: cédula o pasaporte, libreta del auto y seguro con Carta Verde.</div>`;
-    if(e.opts?.length) body += `<div class="opts">${e.opts.slice(0, e.type === 'fuel' ? 3 : 4).map((o, i) => optHTML(o, i, e)).join('')}</div>`;
-    else if(['fuel','lunch','night'].includes(e.type)) body += `<div class="small muted" style="margin-top:6px">No encontré datos en el mapa para este punto. Probá con Google Maps.</div>`;
-    if(e.type === 'end' && e.food?.length) body += `<div class="small" style="margin:12px 0 0;font-weight:600">Para comer en destino</div><div class="opts">${e.food.slice(0, 4).map((o, i) => optHTML(o, i, {})).join('')}</div>`;
+    body += stopOptions(e, PLAN.events.indexOf(e), 4);
+    if(e.type === 'fuel' && !e.opts?.length) body += `<div class="small muted" style="margin-top:6px">No encontré estaciones cargadas en el mapa acá. Probá con Google Maps.</div>`;
     body += navLinks(e.ll, e.title);
     html += `<div class="ev"><div class="t">${hhmm(new Date(e.eta))}</div><div class="pin"><span class="${cls}">${g}</span></div><div class="body">${body}</div></div>`;
   });
@@ -1138,7 +1230,7 @@ function renderTimeline(){
   if(PLAN.sights?.length) html += `<div class="card"><h2>Para ver en el camino</h2><div class="carousel">${PLAN.sights.map(placeCard).join('')}</div></div>`;
   if(PLAN.destSights?.length) html += `<div class="card"><h2>Imperdibles en destino</h2><div class="carousel">${PLAN.destSights.map(placeCard).join('')}</div></div>`;
   el.innerHTML = html;
-  $$('#timeline [data-o]').forEach(b => b.onclick = () => openPlace(OPTS[b.dataset.o]));
+  bindStops(el);
 }
 function navLinks(ll, name){
   if(!ll) return '';
@@ -1159,15 +1251,15 @@ async function openPlace(o){
   const t = o.tags || {};
   const kv = [];
   if(o.kind === 'lodge'){ kv.push(['Tipo', LODGE_LBL[t.tourism] || 'Alojamiento']); if(t.stars) kv.push(['Estrellas', t.stars + '★']); }
-  if(o.kind === 'food'){ kv.push(['Tipo', FOOD_LBL[t.amenity] || 'Comida']); if(t.cuisine) kv.push(['Cocina', t.cuisine.replace(/;/g, ', ').replace(/_/g, ' ')]); }
+  if(o.kind === 'food' || o.kind === 'snack'){ kv.push(['Tipo', t.amenity === 'fuel' ? 'Estación con tienda y café' : FOOD_LBL[t.amenity] || 'Comida']); if(t.cuisine) kv.push(['Cocina', t.cuisine.replace(/;/g, ', ').replace(/_/g, ' ')]); }
   if(o.kind === 'fuel'){ kv.push(['Marca', t.brand || t.operator || '—']); const f = [t['fuel:diesel'] === 'yes' && 'gasoil', t['fuel:octane_95'] === 'yes' && 'súper', t['fuel:octane_98'] === 'yes' && 'premium', t['fuel:cng'] === 'yes' && 'GNC'].filter(Boolean); if(f.length) kv.push(['Combustibles', f.join(', ')]); }
-  if(o.est) kv.push(['Precio estimado', `${money(o.est[0])} a ${money(o.est[1])} ${S.prefs.cur} ${o.kind === 'food' ? 'por persona' : 'por noche'}`]);
+  if(o.est) kv.push(['Precio estimado', `${money(o.est[0])} a ${money(o.est[1])} ${S.prefs.cur} ${o.kind === 'lodge' ? 'por noche' : 'por persona'}`]);
   if(o.kind === 'fuel') kv.push(['Litro aprox.', money(P(ll && G ? countryAt(kmOfPoint(ll).km) : 'AR').fuel[S.car.fuel], S.prefs.cur, {dec:2}) + ' ' + S.prefs.cur]);
   if(t.opening_hours) kv.push(['Horario', t.opening_hours]);
   const phone = t.phone || t['contact:phone']; if(phone) kv.push(['Teléfono', `<span style="user-select:all">${esc(phone)}</span>`]);
   const web = t.website || t['contact:website']; if(web) kv.push(['Web', `<a href="${esc(web)}" target="_blank" rel="noopener" style="color:var(--sky)">${esc(web.replace(/^https?:\/\//, '').slice(0, 40))}</a>`]);
   if(o.off != null && !isWiki) kv.push(['Distancia', o.off < .5 ? 'sobre la ruta' : o.off.toFixed(1) + ' km']);
-  const priceLink = o.kind === 'lodge' ? `https://www.booking.com/searchresults.es.html?ss=${q}` : `https://www.google.com/search?q=${encodeURIComponent((o.kind === 'food' ? 'precios carta ' : o.kind === 'fuel' ? 'precio nafta hoy ' : '') + name + ' ' + city)}`;
+  const priceLink = o.kind === 'lodge' ? `https://www.booking.com/searchresults.es.html?ss=${q}` : `https://www.google.com/search?q=${encodeURIComponent((o.kind === 'food' || o.kind === 'snack' ? 'precios carta ' : o.kind === 'fuel' ? 'precio nafta hoy ' : '') + name + ' ' + city)}`;
   openSheet(`
     <h2>${esc(name)}</h2><div class="muted small">${esc(o.desc || o.why || city)}</div>
     <div class="gallery" id="gal">${o.img ? `<img class="wide" src="${esc(o.img)}" alt="${esc(name)}">` : ''}<div class="small muted" style="grid-column:1/-1">Buscando fotos reales de la zona…</div></div>
@@ -1182,9 +1274,14 @@ async function openPlace(o){
       ${!isWiki ? `<button class="btn" id="sh-exp">Anotar gasto acá</button>` : ''}
       ${isWiki && ll ? `<button class="btn" id="sh-via">Sumar al recorrido</button>` : ''}
     </div>`);
-  $('#sh-exp')?.addEventListener('click', () => { closeSheet(); go('gastos'); expCat = o.kind === 'fuel' ? 'combustible' : o.kind === 'food' ? 'comida' : 'alojamiento'; resetExpForm(); expCat = o.kind === 'fuel' ? 'combustible' : o.kind === 'food' ? 'comida' : 'alojamiento'; renderExpForm(); $('#e-desc').value = name; $('#e-amt').focus(); });
+  $('#sh-exp')?.addEventListener('click', () => { closeSheet(); go('gastos'); expCat = o.kind === 'fuel' ? 'combustible' : (o.kind === 'food' || o.kind === 'snack') ? 'comida' : 'alojamiento'; resetExpForm(); expCat = o.kind === 'fuel' ? 'combustible' : (o.kind === 'food' || o.kind === 'snack') ? 'comida' : 'alojamiento'; renderExpForm(); $('#e-desc').value = name; $('#e-amt').focus(); });
   $('#sh-via')?.addEventListener('click', () => { S.trip.vias.push({name, lat:ll[1], lon:ll[0]}); save(); renderVias(); closeSheet(); go('viaje'); toast('Sumado. Tocá “Calcular ruta” para recalcular.'); SFX.ok(); });
-  $('#sh-choose')?.addEventListener('click', () => { const ev = PLAN.events.find(e => e.opts?.some(x => x.id === o.id)); if(ev){ ev.choice = ev.opts.findIndex(x => x.id === o.id); computeCost(); savePlan(); renderAll(); SFX.ok(); toast('Elegido. Presupuesto actualizado.'); } closeSheet(); });
+  $('#sh-choose')?.addEventListener('click', () => {
+    for(const [idx, ev] of PLAN.events.entries()){
+      const a = ev.opts?.findIndex(x => x.id === o.id) ?? -1; if(a >= 0 && o.kind !== 'fuel'){ choose(idx, 'choice', a); break; }
+      const f = ev.food?.findIndex(x => x.id === o.id) ?? -1; if(f >= 0){ choose(idx, 'foodChoice', f); break; }
+    }
+    closeSheet(); });
   // fotos reales: Wikimedia Commons cerca del lugar + Wikipedia
   const photos = await commonsPhotos(ll, isWiki ? 2000 : 400, 8, isWiki ? name : (o.kind === 'fuel' ? '' : name), isWiki ? '' : city);
   let wt = null; if(!isWiki && ll){ try{ const w = await wikiGeo(ll, 3000, 3); wt = w.find(x => x.extract); }catch{} }
@@ -1212,7 +1309,7 @@ function drawMap(){
   if(!PLAN?.geoms){ return; }
   PLAN.geoms.forEach((g, i) => { if(i === PLAN.sel) return; altLines.push(L.polyline(g.map(p => [p[1], p[0]]), {color:'#8a9690', weight:4, opacity:.6, dashArray:'6 8'}).addTo(map)); });
   routeLine = L.polyline(PLAN.geoms[PLAN.sel].map(p => [p[1], p[0]]), {color:isDark() ? '#3fbf8a' : '#0e6b4a', weight:6, opacity:.95}).addTo(map);
-  const col = {start:'#0e6b4a', fuel:'#c9800a', lunch:'#b5562f', night:'#4b4f9e', border:'#6b6b6b', end:'#b63a2b', sight:'#2a68ad'};
+  const col = {start:'#0e6b4a', fuel:'#c9800a', lunch:'#b5562f', snack:'#8a6d3b', night:'#4b4f9e', border:'#6b6b6b', end:'#b63a2b', sight:'#2a68ad'};
   (PLAN.events || []).forEach(e => {
     if(!e.ll) return;
     const m = L.marker([e.ll[1], e.ll[0]], {icon:L.divIcon({className:'', html:`<div class="mk" style="background:${col[e.type]}">${TYPE[e.type][0]}</div>`, iconSize:[26, 26], iconAnchor:[13, 13]})}).addTo(mkLayer);
@@ -1296,8 +1393,7 @@ async function send(text){
   CHAT.push({r:'me', t:text}); renderChat(); $('#msg').value = ''; SFX.tap();
   const local = localIntent(text);
   if(local){ setTimeout(() => botSay(local), 250); return; }
-  if(S.apiKey){ await askClaude(text); return; }
-  botSay('Esa no la sé responder sin internet abierta. Puedo decirte gastos, clima, paradas, cotización o cuánto falta. Si cargás tu clave de Claude en Viaje › Auto y preferencias, también busco en internet precios, horarios y lo que quieras.');
+  await askClaude(text);
 }
 function parseAmount(s){ let m = s.match(/(\d[\d.,]*)\s*(mil|k|lucas)?/i); if(!m) return null; let n = m[1];
   if(/^\d{1,3}(\.\d{3})+(,\d+)?$/.test(n)) n = n.replace(/\./g, '').replace(',', '.'); else n = n.replace(',', '.');
@@ -1324,6 +1420,8 @@ function localIntent(q){
     const tot = EXP.reduce((a, x) => a + expUSD(x), 0);
     return `Anotado: ${cur} ${amt.toLocaleString('es-UY')} en ${CATS[cat][0].toLowerCase()} (≈ ${moneyLbl(conv(amt, cur, 'USD'))}). Llevás ${moneyLbl(tot)} en total.${lit ? ' Actualicé el precio del litro con tu carga.' : ''} Si algo quedó mal, editalo en Gastos.`;
   }
+  // preguntas largas o con varios temas van a la IA, que tiene todo el contexto del viaje
+  if(s.length > 48 && !QUICK.some(x => x.toLowerCase() === q.toLowerCase())) return null;
   if(/cuanto (llevo|gaste|gastamos|vamos)|presupuesto|gastos?$/.test(s)){
     const tot = EXP.reduce((a, x) => a + expUSD(x), 0), est = PLAN?.cost?.total;
     const by = {}; EXP.forEach(x => by[x.cat] = (by[x.cat] || 0) + expUSD(x));
@@ -1351,6 +1449,12 @@ function localIntent(q){
     const eo = end?.opts?.[end.choice ?? 0];
     return (parts.length ? parts.join('. ') + '. ' : 'Llegás en el día, sin dormir en ruta. ') + (eo ? `En ${end.title} te recomiendo ${eo.name}, ${money(eo.est[0])}–${money(eo.est[1])} ${c} por noche.` : '') + ` Estilo ${STYLES[S.prefs.style].label}: cambialo en Viaje si querés algo más barato o más top.`;
   }
+  if(/refrigerio|merienda|cafe|cafecito|mate|descanso|parar un rato|estirar/.test(s)){
+    const l = PLAN.events.filter(e => e.type === 'snack' && e.km > (LIVE.km ?? -1));
+    if(!l.length) return 'No quedan paradas de refrigerio planificadas. Cualquier estación YPF, Shell o Axion grande tiene café y baño.';
+    const n = l[0], o = n.opts?.[n.choice ?? 0];
+    return `Próximo refrigerio a las ${hhmm(new Date(n.eta))}, km ${Math.round(n.km)}${o ? ': ' + o.name + ' (' + o.why + '), unos ' + money(o.est[0]) + '–' + money(o.est[1]) + ' ' + c + ' por persona' : ''}. Tenés ${l.length} paradas de refrigerio en el plan.`;
+  }
   if(/comer|almorz|cenar|restaur|parador|hambre/.test(s)){
     const l = PLAN.events.filter(e => e.type === 'lunch' && e.km > (LIVE.km ?? -1));
     const parts = l.slice(0, 2).map(e => { const o = e.opts?.[e.choice ?? 0]; return o ? `${e.title}: ${o.name}, ≈ ${money(o.est[0])}–${money(o.est[1])} ${c} por persona` : e.title; });
@@ -1363,37 +1467,69 @@ function localIntent(q){
   if(/ver|visitar|conocer|lugares|turismo|paseo/.test(s) && PLAN.destSights?.length && !/precio|cuesta/.test(s)){
     return 'Para ver: ' + [...(PLAN.sights || []).slice(0, 3), ...PLAN.destSights.slice(0, 4)].map(x => x.title).join(', ') + '. Tocalos en la pestaña Paradas para ver fotos e info.';
   }
-  if(/^ayuda|que (podes|sabes)|como funciona/.test(s)) return 'Puedo: anotar gastos (“gasté 3.000 pesos uruguayos de peaje”), decirte cuánto llevás, la próxima carga, dónde dormir o comer, el clima con alertas, la cotización y cuánto falta. Con clave de Claude busco en internet precios reales y respondo cualquier pregunta.';
+  if(/^ayuda|que (podes|sabes)|como funciona/.test(s)) return 'Puedo anotar gastos (“gasté 3.000 pesos uruguayos de peaje”), decirte cuánto llevás, la próxima carga, dónde dormir, comer o tomar algo, el clima con alertas, la cotización y cuánto falta. Y cualquier otra pregunta sobre el viaje también: preguntame lo que quieras.';
   return null;
 }
 function tripContext(){
   if(!PLAN?.events) return {viaje:S.trip.from.name + ' a ' + S.trip.to.name, plan:'sin calcular'};
   return {
     origen:S.trip.from.name, destino:S.trip.to.name, salida:S.trip.date + ' ' + S.trip.time, estilo:STYLES[S.prefs.style].label, personas:S.prefs.people, nochesEnDestino:S.trip.stay,
-    km:Math.round(PLAN.km), horasManejo:+PLAN.h.toFixed(1), ruta:PLAN.routes[PLAN.sel].via, auto:S.car,
+    km:Math.round(PLAN.km), horasManejo:+PLAN.h.toFixed(1), ruta:PLAN.routes[PLAN.sel].via, auto:{vehiculo:carName(), consumo:S.car.cons, tanque:S.car.tank, combustible:S.car.fuel},
     paradas:PLAN.events.map(e => ({tipo:TYPE[e.type][2], km:Math.round(e.km), hora:new Date(e.eta).toLocaleString('es-UY'), lugar:e.title, eleccion:e.opts?.[e.choice ?? 0]?.name, clima:e.wx ? WX(e.wx.code)[0] + ' ' + Math.round(e.wx.t) + '°' : undefined})),
     presupuestoUSD:Math.round(PLAN.cost?.total || 0), gastadoUSD:Math.round(EXP.reduce((a, x) => a + expUSD(x), 0)),
-    cotizacion:{UYU:RATES.UYU, ARS_oficial:RATES.ARS, ARS_tarjeta:RATES._arsTarjeta}, kmRecorridos:LIVE.km != null ? Math.round(LIVE.km) : null, monedaPreferida:S.prefs.cur
+    cotizacion:{UYU:RATES.UYU, ARS_oficial:RATES.ARS, ARS_tarjeta:RATES._arsTarjeta}, kmRecorridos:LIVE.km != null ? Math.round(LIVE.km) : null, monedaPreferida:S.prefs.cur,
+    opcionesPorParada:PLAN.events.filter(e => e.opts?.length || e.food?.length).map(e => ({parada:e.title, km:Math.round(e.km),
+      opciones:(e.opts || []).slice(0, 3).map(o => o.name + (o.est ? ' (' + Math.round(o.est[0]) + '-' + Math.round(o.est[1]) + ' USD ' + (o.kind === 'lodge' ? 'noche' : 'p/p') + ')' : '') + ' — ' + (o.why || '')),
+      cenar:(e.food || []).slice(0, 3).map(o => o.name + (o.est ? ' (' + Math.round(o.est[0]) + '-' + Math.round(o.est[1]) + ' USD p/p)' : ''))})),
+    lugaresParaVerEnElCamino:(PLAN.sights || []).map(x => x.title + ' (km ' + Math.round(x.km) + ')'),
+    queVerCercaDelDestino:(PLAN.destSights || []).map(x => x.title + ' (a ' + Math.round(x.d) + ' km de ' + S.trip.to.name.split(',')[0] + ')'),
+    nochesEnRuta:PLAN.events.filter(e => e.type === 'night').map((e, i) => ({noche:i + 1, dia:e.day, lugar:e.town || e.title, dormir:(e.opts || []).slice(0, 3).map(o => o.name), cenar:(e.food || []).slice(0, 3).map(o => o.name + (o.est ? ' (' + Math.round(o.est[0]) + '-' + Math.round(o.est[1]) + ' USD p/p)' : ''))})),
+    alertas:buildAlerts().map(a => a[1].replace(/<[^>]+>/g, '')).slice(0, 8),
+    gastosPorCategoriaUSD:Object.fromEntries(Object.keys(CATS).map(k => [k, Math.round(EXP.filter(x => x.cat === k).reduce((a, x) => a + expUSD(x), 0))]))
   };
+}
+async function claudeRaw(prompt, system, messages = null){
+  let msgs = messages || [{role:'user', content:prompt}], out = '';
+  for(let round = 0; round < 3; round++){
+    const r = await fetch('https://api.anthropic.com/v1/messages', {method:'POST', headers:{'content-type':'application/json', 'x-api-key':S.apiKey, 'anthropic-version':'2023-06-01', 'anthropic-dangerous-direct-browser-access':'true', 'anthropic-beta':'server-side-fallback-2026-07-01'},
+      body:JSON.stringify({model:'claude-opus-5-5', max_tokens:2000, output_config:{effort:'low'}, fallbacks:'default', system, messages:msgs, tools:[{type:'web_search_20260209', name:'web_search', max_uses:3}]})});
+    const d = await r.json();
+    if(!r.ok) throw new Error(d.error?.message || 'Error ' + r.status);
+    if(d.stop_reason === 'refusal') return 'Prefiero no responder eso. Preguntame otra cosa del viaje.';
+    out += d.content.filter(b => b.type === 'text').map(b => b.text).join('');
+    if(d.stop_reason !== 'pause_turn') break;
+    msgs = [...msgs, {role:'assistant', content:d.content}];
+  }
+  return out;
+}
+async function freeAI(system, hist){
+  const ctl = new AbortController(); const t = setTimeout(() => ctl.abort(), 45000);
+  try{
+    const r = await fetch('https://text.pollinations.ai/openai', {method:'POST', signal:ctl.signal, headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'openai-fast', temperature:0.4, referrer:'bitacora-ruta', messages:[{role:'system', content:system}, ...hist]})});
+    if(!r.ok) throw new Error('HTTP ' + r.status);
+    const d = await r.json(); return (d.choices?.[0]?.message?.content || '').replace(/\*\*/g, '').trim();
+  }finally{ clearTimeout(t); }
 }
 async function askClaude(text){
   CHAT.push({r:'bot', t:'Pensando…'}); renderChat();
   const hist = CHAT.filter(m => m.t !== 'Pensando…').slice(-10).map(m => ({role:m.r === 'me' ? 'user' : 'assistant', content:m.t}));
   while(hist.length && hist[0].role !== 'user') hist.shift();
-  const system = `Sos el copiloto de un viaje en auto por Sudamérica. Hablás en español rioplatense, cálido y directo. Respondé corto (máximo 5 oraciones) porque la respuesta se lee en voz alta mientras manejan. Cuando te pregunten precios, horarios, estado de rutas o pasos fronterizos, buscá en internet y decí de dónde sale el dato. Convertí montos a ${S.prefs.cur} con la cotización del contexto. Datos actuales del viaje: ${JSON.stringify(tripContext())}`;
-  let messages = hist, out = '';
+  const ctx = JSON.stringify(tripContext());
+  let out = '';
   try{
-    for(let round = 0; round < 3; round++){
-      const r = await fetch('https://api.anthropic.com/v1/messages', {method:'POST', headers:{'content-type':'application/json', 'x-api-key':S.apiKey, 'anthropic-version':'2023-06-01', 'anthropic-dangerous-direct-browser-access':'true', 'anthropic-beta':'server-side-fallback-2026-07-01'},
-        body:JSON.stringify({model:'claude-opus-5-5', max_tokens:2000, output_config:{effort:'low'}, fallbacks:'default', system, messages, tools:[{type:'web_search_20260209', name:'web_search', max_uses:3}]})});
-      const d = await r.json();
-      if(!r.ok) throw new Error(d.error?.message || 'Error ' + r.status);
-      if(d.stop_reason === 'refusal'){ out = 'Prefiero no responder eso. Preguntame otra cosa del viaje.'; break; }
-      out += d.content.filter(b => b.type === 'text').map(b => b.text).join('');
-      if(d.stop_reason !== 'pause_turn') break;
-      messages = [...messages, {role:'assistant', content:d.content}];
+    if(S.apiKey){
+      const system = `Sos el copiloto de un viaje en auto por Sudamérica. Hablás en español rioplatense, cálido y directo. Respondé corto (máximo 5 oraciones) porque la respuesta se lee en voz alta mientras manejan. Cuando te pregunten precios, horarios, estado de rutas o pasos fronterizos, buscá en internet y decí de dónde sale el dato. Convertí montos a ${S.prefs.cur} con la cotización del contexto. Datos actuales del viaje: ${ctx}`;
+      out = await claudeRaw(null, system, hist);
+    }else{
+      const system = `Sos el copiloto de un viaje en auto. Hablás en español rioplatense, cálido y directo. Respondé en máximo 4 oraciones claras y simples, sin markdown, porque se lee en voz alta. “Primera noche” es nochesEnRuta[0]. Para qué visitar en destino usá queVerCercaDelDestino. Para lugares, hoteles, restaurantes, distancias, horarios, clima y precios usá SOLO los datos del contexto. Si algo no está en el contexto, decí que no lo sabés con certeza y sugerí verificarlo en Google Maps o en la pestaña Paradas. No inventes nombres ni precios. Montos en ${S.prefs.cur} usando la cotización del contexto. Hoy es ${new Date().toLocaleDateString('es-UY')}. Contexto del viaje: ${ctx}`;
+      const h2 = hist.map(m => ({role:m.role, content:m.content.slice(0, 1500)}));
+      try{ out = await freeAI(system, h2); }catch{ await sleep(2500); out = await freeAI(system, h2); } // un reintento si está saturada
     }
-  }catch(e){ out = 'No pude consultar a Claude: ' + e.message + '. Revisá la clave o la señal.'; }
+  }catch(e){
+    out = S.apiKey ? 'No pude consultar a Claude: ' + e.message + '. Revisá la clave o la señal.'
+      : 'La IA gratuita no respondió (puede estar saturada o no hay señal). Probá de nuevo en un rato. Mientras tanto te puedo decir gastos, clima, paradas, cotización y cuánto falta.';
+  }
   CHAT = CHAT.filter(m => m.t !== 'Pensando…');
   botSay(out.trim() || 'No encontré una respuesta.');
 }
@@ -1410,6 +1546,93 @@ $('#mic').onclick = () => {
   rec.onend = () => { $('#mic').classList.remove('rec'); rec = null; };
   rec.onerror = () => { toast('No te escuché, probá de nuevo'); };
   rec.start();
+};
+
+/* ============ vehículo ============ */
+// Consumo en ruta aproximado (L/100 km a ~100 km/h), tanque en litros. d = gasoil, h = híbrido.
+const VEH = {
+  Chevrolet:{Onix:['auto',44,{'1.0 turbo':5.4,'1.2':5.7,'1.4':6.1}], Prisma:['auto',54,{'1.4':6.2}], Cruze:['auto',52,{'1.4 turbo':6.0,'1.8':7.2}], Tracker:['suv',44,{'1.2 turbo':6.0,'1.8':8.0}], S10:['pickup',76,{'2.8 TD':'8.5d','2.4':10.5}], Spin:['van',53,{'1.8':8.3}], Corsa:['auto',50,{'1.4':6.6,'1.6':7.0}], Agile:['auto',54,{'1.4':6.8}], Montana:['pickup',44,{'1.2 turbo':6.6}]},
+  Fiat:{Cronos:['auto',48,{'1.3':6.0,'1.8':7.0}], Argo:['auto',48,{'1.0':5.4,'1.3':5.9,'1.8':7.0}], Mobi:['auto',47,{'1.0':5.2}], Uno:['auto',48,{'1.3':6.2,'1.4':6.4}], Palio:['auto',48,{'1.4':6.5,'1.6':7.0}], Strada:['pickup',55,{'1.3':6.6,'1.4':7.0}], Toro:['pickup',60,{'1.3 turbo':8.0,'2.0 TD':'7.8d'}], Fiorino:['van',55,{'1.4':7.5}], Pulse:['suv',47,{'1.0 turbo':6.0,'1.3':6.6}], Fastback:['suv',47,{'1.0 turbo':6.1}]},
+  Volkswagen:{Gol:['auto',55,{'1.4':6.5,'1.6':6.8}], Polo:['auto',52,{'1.0 TSI':5.4,'1.6':6.4}], Virtus:['auto',52,{'1.0 TSI':5.5,'1.6':6.5}], 'T-Cross':['suv',52,{'1.0 TSI':6.0,'1.6':7.2}], Nivus:['suv',52,{'1.0 TSI':6.0}], Taos:['suv',50,{'1.4 TSI':6.8}], Amarok:['pickup',80,{'2.0 TDI':'8.0d','3.0 V6 TDI':'9.5d'}], Saveiro:['pickup',55,{'1.6':7.2}], Vento:['auto',51,{'1.4 TSI':6.2,'2.5':8.2}], Suran:['van',51,{'1.6':7.2}], Fox:['auto',50,{'1.6':6.8}], Up:['auto',50,{'1.0':5.0}]},
+  Toyota:{Hilux:['pickup',80,{'2.4 TD':'8.0d','2.8 TD':'8.6d','2.7':11.0}], SW4:['suv',80,{'2.8 TD':'9.0d'}], Etios:['auto',45,{'1.5':5.9}], Yaris:['auto',42,{'1.5':5.8}], Corolla:['auto',50,{'1.8 híbrido':'4.6h','2.0':6.4,'1.8':6.6}], 'Corolla Cross':['suv',47,{'1.8 híbrido':'5.0h','2.0':7.0}], RAV4:['suv',55,{'2.5 híbrido':'5.5h','2.0':7.8}]},
+  Renault:{Sandero:['auto',50,{'1.6':6.6}], Stepway:['auto',50,{'1.6':6.9}], Logan:['auto',50,{'1.6':6.5}], Kwid:['auto',38,{'1.0':5.0}], Clio:['auto',50,{'1.2':6.0}], Duster:['suv',50,{'1.6':7.6,'1.3 turbo':7.0,'2.0':8.4}], Captur:['suv',50,{'1.6':7.6,'1.3 turbo':7.0}], Oroch:['pickup',50,{'1.6':7.8,'1.3 turbo':7.2}], Kangoo:['van',60,{'1.6':7.8,'1.5 dCi':'6.0d'}], Alaskan:['pickup',80,{'2.3 TD':'8.6d'}], Fluence:['auto',60,{'2.0':7.2}]},
+  Peugeot:{'208':['auto',47,{'1.0':5.6,'1.2':5.8,'1.6':6.4}], '2008':['suv',47,{'1.0 turbo':6.0,'1.6':7.0}], '308':['auto',60,{'1.6':6.6}], '3008':['suv',53,{'1.6 turbo':6.8}], '207':['auto',50,{'1.4':6.4}], Partner:['van',55,{'1.6':7.5,'1.6 HDi':'5.8d'}]},
+  'Citroën':{C3:['auto',47,{'1.2':5.9,'1.6':6.6}], 'C3 Aircross':['suv',47,{'1.2 turbo':6.4,'1.6':7.2}], 'C4 Cactus':['suv',55,{'1.6':7.0}], Berlingo:['van',55,{'1.6':7.5,'1.6 HDi':'5.8d'}]},
+  Ford:{Ranger:['pickup',80,{'2.2 TD':'8.4d','3.2 TD':'9.5d','3.0 V6 TD':'10.0d','2.5':10.8}], Ka:['auto',51,{'1.5':6.3}], EcoSport:['suv',52,{'1.5':7.2,'1.6':7.6,'2.0':8.5}], Territory:['suv',52,{'1.5 turbo':7.5}], Fiesta:['auto',42,{'1.6':6.4}], Focus:['auto',55,{'1.6':6.8,'2.0':7.0}], Maverick:['pickup',60,{'2.0 turbo':8.5,'2.5 híbrido':'6.2h'}]},
+  Nissan:{Versa:['auto',41,{'1.6':6.0}], March:['auto',41,{'1.6':6.2}], Sentra:['auto',50,{'2.0':6.8}], Kicks:['suv',41,{'1.6':6.4}], Frontier:['pickup',80,{'2.3 TD':'8.3d','2.5 TD':'8.8d'}], 'X-Trail':['suv',60,{'2.5':8.6}]},
+  Hyundai:{HB20:['auto',50,{'1.0':5.4,'1.6':6.4}], i10:['auto',40,{'1.2':5.3}], Accent:['auto',45,{'1.4':6.0,'1.6':6.3}], Creta:['suv',50,{'1.6':7.0,'2.0':8.0}], Tucson:['suv',62,{'2.0':8.4,'2.0 CRDi':'6.8d'}], 'Santa Fe':['suv',71,{'2.2 CRDi':'7.6d'}]},
+  Kia:{Picanto:['auto',35,{'1.0':5.0,'1.2':5.3}], Rio:['auto',45,{'1.4':6.0}], Cerato:['auto',50,{'1.6':6.4,'2.0':6.9}], Seltos:['suv',50,{'1.6':7.0}], Sportage:['suv',62,{'2.0':8.4,'2.0 CRDi':'6.8d'}], Sorento:['suv',71,{'2.2 CRDi':'7.6d'}]},
+  Suzuki:{Celerio:['auto',35,{'1.0':4.8}], Swift:['auto',37,{'1.2':5.2}], Baleno:['auto',37,{'1.4':5.5}], Vitara:['suv',47,{'1.6':6.8}], Jimny:['suv',40,{'1.5':7.6}]},
+  Honda:{Fit:['auto',45,{'1.5':5.9}], City:['auto',40,{'1.5':5.9}], Civic:['auto',47,{'2.0':6.6,'1.5 turbo':6.2}], 'HR-V':['suv',50,{'1.8':7.2,'1.5 turbo':7.0}], 'WR-V':['suv',45,{'1.5':6.6}], 'CR-V':['suv',57,{'1.5 turbo':7.6}]},
+  Jeep:{Renegade:['suv',48,{'1.3 turbo':7.2,'1.8':8.5}], Compass:['suv',60,{'1.3 turbo':7.6,'2.0 TD':'7.0d'}], Commander:['suv',60,{'1.3 turbo':8.0}]},
+  Mitsubishi:{L200:['pickup',75,{'2.4 TD':'8.3d','2.5 TD':'8.6d'}], Outlander:['suv',60,{'2.4':8.8}], ASX:['suv',60,{'2.0':8.0}]},
+  Chery:{'Tiggo 2':['suv',40,{'1.5':7.0}], 'Tiggo 3':['suv',40,{'1.6':7.4}], 'Tiggo 4':['suv',51,{'1.5 turbo':7.4}], 'Tiggo 7':['suv',55,{'1.5 turbo':7.8}], QQ:['auto',35,{'1.0':5.4}]},
+  Geely:{Coolray:['suv',45,{'1.5 turbo':7.0}], GX3:['suv',40,{'1.5':6.8}], Emgrand:['auto',50,{'1.5':6.2}]},
+  BYD:{'Song Plus DM-i':['suv',52,{'1.5 híbrido':'5.0h'}], 'Seal U DM-i':['suv',60,{'1.5 híbrido':'5.2h'}], 'King DM-i':['auto',48,{'1.5 híbrido':'4.4h'}]},
+  JAC:{S2:['suv',40,{'1.5':7.0}], T8:['pickup',76,{'2.0 TD':'8.4d'}]},
+  'Great Wall':{Wingle:['pickup',70,{'2.0 TD':'8.4d'}], Poer:['pickup',78,{'2.0 TD':'8.6d'}]},
+  Ram:{'1500':['pickup',98,{'5.7 V8':14.0}], Rampage:['pickup',55,{'2.0 turbo':9.0}]},
+  'Mercedes-Benz':{'Clase A':['auto',43,{'1.3 turbo':6.0}], GLA:['suv',43,{'1.3 turbo':6.6}], Sprinter:['van',71,{'2.1 CDI':'9.5d'}]},
+  BMW:{'Serie 1':['auto',50,{'1.5 turbo':5.8}], X1:['suv',51,{'2.0 turbo':7.0}]}
+};
+const VTYPE = {auto:'auto', suv:'SUV', pickup:'pickup', van:'utilitario'};
+function estimateCar(c){ // devuelve {cons, tank, fuel, src}
+  const m = VEH[c.brand]?.[c.model];
+  let cons, tank, fuel = c.fuelSel || 'super', src, type = m ? m[0] : c.type || 'auto';
+  if(m && m[2][c.engine] != null){
+    const raw = String(m[2][c.engine]); cons = parseFloat(raw); tank = m[1];
+    fuel = raw.endsWith('d') ? 'diesel' : (fuel === 'diesel' ? 'super' : fuel); src = 'tabla de referencia del modelo';
+  }else{
+    const L = parseFloat(c.cc) || (m ? parseFloat(Object.keys(m[2])[0]) : 1.6);
+    cons = (3.2 + 2.1 * L) * ({auto:1, suv:1.15, pickup:1.3, van:1.25}[type] || 1);
+    if(fuel === 'diesel') cons *= .82;
+    tank = m ? m[1] : {auto:48, suv:55, pickup:78, van:60}[type]; src = 'estimado por cilindrada (' + L.toFixed(1) + ' L) y tipo (' + VTYPE[type] + ')';
+  }
+  const y = parseInt(c.year) || 2018; // los autos viejos gastan un poco más
+  if(y < 2000) cons *= 1.15; else if(y < 2008) cons *= 1.09; else if(y < 2014) cons *= 1.04;
+  return {cons:Math.round(cons * 10) / 10, tank, fuel, src, type};
+}
+function fillVehicle(){
+  const c = S.car, brands = Object.keys(VEH).sort((a, b) => a.localeCompare(b));
+  $('#v-brand').innerHTML = '<option value="">Elegí la marca</option>' + brands.map(b => `<option ${b === c.brand ? 'selected' : ''}>${esc(b)}</option>`).join('') + `<option value="_otro" ${c.brand === '_otro' ? 'selected' : ''}>Otra marca</option>`;
+  const models = c.brand && VEH[c.brand] ? Object.keys(VEH[c.brand]) : [];
+  $('#v-model').innerHTML = c.brand === '_otro' ? '<option value="_otro">Otro</option>' : '<option value="">Elegí el modelo</option>' + models.map(m => `<option ${m === c.model ? 'selected' : ''}>${esc(m)}</option>`).join('') + (c.brand ? `<option value="_otro" ${c.model === '_otro' ? 'selected' : ''}>Otro modelo</option>` : '');
+  const known = VEH[c.brand]?.[c.model];
+  const engines = known ? Object.keys(known[2]) : [];
+  $('#v-engine').innerHTML = engines.map(e => `<option ${e === c.engine ? 'selected' : ''}>${esc(e)}</option>`).join('') + '<option value="_otro" ' + (!known || c.engine === '_otro' ? 'selected' : '') + '>Otro motor</option>';
+  const other = !known || c.engine === '_otro' || !engines.includes(c.engine);
+  $('#v-cc-w').hidden = !other; $('#v-other').hidden = !(c.brand === '_otro' || c.model === '_otro');
+  $('#v-cc').value = c.cc || ''; $('#v-year').value = c.year || ''; $('#v-type').value = c.type || 'auto'; $('#v-name').value = c.name || '';
+  const est = c.src ? `${esc(carName())}: <b>${c.cons} L/100 km</b> en ruta, tanque de ${c.tank} L, ${({super:'nafta súper', premium:'nafta premium', diesel:'gasoil'})[c.fuel]}. Autonomía ≈ ${Math.round(c.tank / c.cons * 100)} km. <span class="muted">Fuente: ${esc(c.src)}. Podés corregirlo abajo.</span>` : 'Elegí tu auto y la app calcula el consumo en ruta, el tanque y la autonomía.';
+  $('#v-info').innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 8h.01"/></svg><div>${est}</div>`;
+  $('#v-search').hidden = !S.apiKey || !(c.brand && c.brand !== '');
+}
+const carName = () => { const c = S.car; return ((c.brand === '_otro' || c.model === '_otro') ? (c.name || 'Tu auto') : [c.brand, c.model].filter(Boolean).join(' ')) + (c.engine && c.engine !== '_otro' ? ' ' + c.engine : c.cc ? ' ' + c.cc : '') + (c.year ? ' ' + c.year : ''); };
+function applyVehicle(){
+  const c = S.car;
+  c.brand = $('#v-brand').value; c.model = $('#v-model').value; c.engine = $('#v-engine').value; c.cc = $('#v-cc').value; c.year = $('#v-year').value; c.type = $('#v-type').value; c.name = $('#v-name').value.trim();
+  if(!c.brand){ fillVehicle(); return; }
+  if(c.brand !== '_otro' && c.model && c.model !== '_otro' || c.cc || c.brand === '_otro'){
+    const e = estimateCar({...c, fuelSel:$('#f-fuel').value}); c.cons = e.cons; c.tank = e.tank; c.fuel = e.fuel; c.src = e.src;
+    $('#f-cons').value = c.cons; $('#f-tank').value = c.tank; $('#f-fuel').value = c.fuel;
+  }
+  save(); fillVehicle();
+  if(PLAN?.events){ computeCost(); savePlan(); renderAll(); }
+}
+$('#v-brand').onchange = () => { $('#f-fuel').value = 'super'; S.car.brand = $('#v-brand').value; S.car.model = S.car.brand === '_otro' ? '_otro' : ''; S.car.engine = ''; fillVehicle(); applyVehicle(); SFX.tap(); };
+$('#v-model').onchange = () => { S.car.model = $('#v-model').value; const m = VEH[S.car.brand]?.[S.car.model]; S.car.engine = m ? Object.keys(m[2])[0] : '_otro'; fillVehicle(); applyVehicle(); SFX.tap(); };
+['#v-engine', '#v-cc', '#v-year', '#v-type', '#v-name'].forEach(id => $(id).addEventListener('change', () => { applyVehicle(); }));
+$('#v-search').onclick = async () => {
+  const b = $('#v-search'); b.disabled = true; b.textContent = 'Buscando ficha…'; SFX.tap();
+  try{
+    const txt = await claudeRaw(`Buscá en internet la ficha técnica del ${carName()} (versión vendida en Uruguay/Argentina). Respondé SOLO un JSON: {"consumo_ruta_l100": número, "tanque_l": número, "combustible": "super"|"premium"|"diesel", "fuente": "sitio de donde sale"}.`, 'Respondés solo JSON válido, sin texto extra.');
+    const j = JSON.parse(txt.slice(txt.indexOf('{'), txt.lastIndexOf('}') + 1));
+    if(!(j.consumo_ruta_l100 > 2 && j.consumo_ruta_l100 < 30)) throw new Error('dato raro');
+    Object.assign(S.car, {cons:+j.consumo_ruta_l100, tank:+j.tanque_l || S.car.tank, fuel:['super','premium','diesel'].includes(j.combustible) ? j.combustible : S.car.fuel, src:'ficha técnica en internet' + (j.fuente ? ' (' + j.fuente + ')' : '')});
+    $('#f-cons').value = S.car.cons; $('#f-tank').value = S.car.tank; $('#f-fuel').value = S.car.fuel; save(); fillVehicle(); if(PLAN?.events){ computeCost(); savePlan(); renderAll(); }
+    SFX.ok(); toast('Ficha encontrada');
+  }catch(e){ SFX.alert(); toast('No pude encontrar la ficha. Quedó el estimado.'); }
+  b.disabled = false; b.textContent = 'Buscar ficha técnica en internet';
 };
 
 /* ============ formulario de viaje ============ */
@@ -1448,20 +1671,18 @@ $$('#styles .style-opt').forEach(b => b.onclick = async () => {
 });
 function rerankForStyle(){
   const st = S.prefs.style;
+  const sc = (o, e) => o.kind === 'lodge' ? scoreLodge({tags:o.tags, _off:o.off}, st) : o.kind === 'food' ? scoreFood({tags:o.tags, _off:o.off}, st) : o.kind === 'snack' ? scoreSnack({tags:o.tags, _off:o.off}) : scoreFuel({tags:o.tags, _off:o.off, _km:e.km}, st, e.km);
   for(const e of PLAN.events){
-    if(!e.opts?.length) continue; e.choice = undefined;
-    const sc = o => o.kind === 'lodge' ? scoreLodge({tags:o.tags, _off:o.off}, st) : o.kind === 'food' ? scoreFood({tags:o.tags, _off:o.off}, st) : scoreFuel({tags:o.tags, _off:o.off, _km:e.km}, st, e.km);
-    e.opts.sort((a, b) => sc(b) - sc(a));
-    e.opts.forEach(o => { const cc = countryAt(e.km);
-      if(o.kind === 'lodge'){ o.why = whyLodge({tags:o.tags, _off:o.off}, st).replace(/de la ruta/, 'del centro'); o.est = estHotel(o.tags, cc); }
-      if(o.kind === 'food') o.est = estMeal(o.tags, cc); });
+    const cc = countryAt(e.km);
+    if(e.opts?.length){ e.choice = undefined; e.opts.sort((a, b) => sc(b, e) - sc(a, e));
+      e.opts.forEach(o => { if(o.kind === 'lodge'){ o.why = whyLodge({tags:o.tags, _off:o.off}, st).replace(/de la ruta/, 'del centro'); o.est = estHotel(o.tags, cc); } if(o.kind === 'food') o.est = estMeal(o.tags, cc); }); }
+    if(e.food?.length){ e.foodChoice = undefined; e.food.forEach(o => o.est = estMeal(o.tags, cc)); e.food.sort((a, b) => sc(b, e) - sc(a, e)); }
   }
-  const end = PLAN.events.find(e => e.type === 'end'); if(end?.food) end.food.forEach(o => o.est = estMeal(o.tags, countryAt(end.km))); if(end?.food) end.food.sort((a, b) => scoreFood({tags:b.tags, _off:b.off}, st) - scoreFood({tags:a.tags, _off:a.off}, st));
   PLAN.style = st;
 }
 ['#f-date', '#f-time'].forEach(id => $(id).addEventListener('change', () => { readForm(); if(PLAN?.events){ timeline(); savePlan(); renderAll(); } }));
-['#f-stay', '#f-people', '#f-round', '#f-cons', '#f-tank', '#f-fuel'].forEach(id => $(id).addEventListener('change', () => { readForm(); if(PLAN?.events){ computeCost(); savePlan(); renderAll(); } }));
-$('#f-key').addEventListener('change', readForm);
+['#f-stay', '#f-people', '#f-round', '#f-cons', '#f-tank', '#f-fuel'].forEach(id => $(id).addEventListener('change', () => { readForm(); if(['#f-cons', '#f-tank'].includes(id) && S.car.src){ S.car.src = 'dato cargado a mano'; save(); fillVehicle(); } if(PLAN?.events){ computeCost(); savePlan(); renderAll(); } }));
+$('#f-key').addEventListener('change', () => { readForm(); fillVehicle(); });
 $('#edit-prices').onclick = () => {
   const cs = Object.keys(S.prices);
   openSheet(`<h2>Precios de referencia</h2><p class="small muted">En dólares. Se usan para estimar cuando no hay precio en vivo. Cuando anotás una carga con litros, el precio del combustible se actualiza solo.</p>
@@ -1498,14 +1719,15 @@ function go(v){
 $$('.tabs button').forEach(b => b.onclick = () => { SFX.tap(); go(b.dataset.v); });
 
 function renderAll(){
+  OPTS = {};
   if(PLAN?.geoms && !G) G = buildGeo(PLAN.geoms[PLAN.sel]);
-  renderHero(); renderRoutes(); renderCost(); renderAlerts(); renderTimeline(); renderExpenses();
+  renderHero(); renderRoutes(); renderStopsCard(); renderCost(); renderAlerts(); renderTimeline(); renderExpenses();
   if(map) drawMap();
   if($('#v-mapa').classList.contains('on')) renderLive();
 }
 
 /* ============ inicio ============ */
-renderSnd(); fillForm(); renderVias(); resetExpForm(); renderAll(); renderRates();
+renderSnd(); fillForm(); fillVehicle(); renderVias(); resetExpForm(); renderAll(); renderRates();
 loadRates(); setInterval(() => loadRates(), 30 * 60e3);
 try{ const t = sessionStorage.getItem('bit.tab'); if(t) go(t); }catch{}
 if(!PLAN) planTrip(); // primera vez: arma el viaje precargado

@@ -1,5 +1,5 @@
 // Bitácora de Ruta — service worker: app offline + caché de mapas y consultas
-const V = 'bitacora-v1';
+const V = 'bitacora-v2';
 const SHELL = ['./', './index.html', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png', './icons/apple-touch-icon.png'];
 
 self.addEventListener('install', e => {
