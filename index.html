@@ -312,6 +312,8 @@ details.more[open] summary{margin-bottom:10px}
             <div class="field"><label for="f-stay">Noches en destino</label><input class="input" type="number" min="0" id="f-stay"></div>
             <div class="field"><label for="f-people">Personas</label><input class="input" type="number" min="1" id="f-people"></div>
           </div>
+          <div class="field"><label for="f-nights">Noches en el camino</label><select class="input" id="f-nights"></select>
+            <div class="small muted" id="nights-hint"></div></div>
           <label class="toggle"><input type="checkbox" id="f-round"> Calcular también la vuelta</label>
           <details class="more">
             <summary>Auto y preferencias ›</summary>
@@ -792,8 +794,10 @@ async function buildPlanFor(sel, set = () => {}){
   ev.push({type:'end', km:G.total, title:S.trip.to.name.split(',')[0], ll:G.pts[G.pts.length-1]});
 
   // 3. noches y almuerzos
-  const hours = S.prefs.hours, dayKm = hours * kmh;
-  const nights = []; for(let k = dayKm; k < G.total - kmh * 1.5; k += dayKm) nights.push(k);
+  const hours = S.prefs.hours, dayKm = hours * kmh, fixedN = S.prefs.nights === 'auto' || S.prefs.nights == null ? null : +S.prefs.nights;
+  const nights = [];
+  if(fixedN == null){ for(let k = dayKm; k < G.total - kmh * 1.5; k += dayKm) nights.push(k); }
+  else for(let i = 1; i <= fixedN; i++) nights.push(G.total * i / (fixedN + 1)); // tramos parejos
   const dayStarts = [0, ...nights];
   dayStarts.forEach((s, i) => { const e = nights[i] ?? G.total; if((e - s) / kmh > 5){ ev.push({type:'lunch', km:s + Math.min(4.5 * kmh, (e - s) * .5), title:'Almuerzo'}); } });
   nights.forEach(k => ev.push({type:'night', km:k, title:'Noche'}));
@@ -1136,12 +1140,33 @@ function renderRoutes(){
       <b>${esc(r.via)}</b><span class="num">${fmtKm(r.km)}</span>
       <span class="small muted">${fmtH(r.h)} de manejo · nafta ≈ ${money(fuelUsd)}</span><span>${r === fastest ? '<span class="badge">Más rápida</span>' : ''} ${r === cheapest && r !== fastest ? '<span class="badge amber">Más corta</span>' : ''}</span></button>`;
   }).join('') + (PLAN.routes.length === 1 ? '<p class="small muted" style="margin:0">Con paradas intermedias se calcula una sola ruta que pasa por todas.</p>' : '');
-  $$('#routes .route-opt').forEach(b => b.onclick = async () => {
-    const i = +b.dataset.i; if(i === PLAN.sel || planning) return; SFX.tap(); planning = true;
-    $('#progress').hidden = false; const steps = ['Recalculando paradas','Países','Combustible','Comida y alojamiento','Clima','Lugares'].map(t => ({t, st:''}));
-    try{ await buildPlanFor(i, (k, st) => { steps[k].st = st; stepUI(steps); }); SFX.route(); toast('Ruta cambiada'); }catch{ SFX.alert(); toast('No pude recalcular'); } finally{ planning = false; }
-  });
+  $$('#routes .route-opt').forEach(b => b.onclick = () => { const i = +b.dataset.i; if(i !== PLAN.sel) replanStops(i, 'Ruta cambiada'); });
 }
+async function replanStops(i = PLAN.sel, msg = 'Paradas recalculadas'){
+  if(planning || !PLAN?.routes) return; SFX.tap(); planning = true;
+  $('#progress').hidden = false; const steps = ['Recalculando paradas','Países','Combustible','Comida, refrigerios y alojamiento','Clima','Lugares'].map(t => ({t, st:''}));
+  $('#progress').scrollIntoView({behavior:'smooth', block:'center'});
+  try{ await buildPlanFor(i, (k, st) => { steps[k].st = st; stepUI(steps); }); SFX.route(); toast(msg); say(msg + `. Ahora son ${PLAN.days} ${PLAN.days > 1 ? 'días' : 'día'} de viaje. Gasto estimado: ${spoken(PLAN.cost.total)}.`); }
+  catch{ SFX.alert(); toast('No pude recalcular'); } finally{ planning = false; renderNights(); }
+}
+function renderNights(){
+  const sel = $('#f-nights'), cur = S.prefs.nights ?? 'auto';
+  const h = PLAN?.h, kmTot = PLAN?.km;
+  const per = n => h ? ' · ≈ ' + fmtH(h / (n + 1)) + ' de manejo por día' : '';
+  let autoN = null; if(h){ autoN = 0; for(let t = S.prefs.hours; t < h - 1.5; t += S.prefs.hours) autoN++; } // mismo criterio que el cálculo
+  sel.innerHTML = `<option value="auto">Automático (máx. ${S.prefs.hours} h por día${autoN != null ? ' → ' + autoN + (autoN === 1 ? ' noche' : ' noches') : ''})</option>`
+    + [0, 1, 2, 3, 4, 5, 6].map(n => `<option value="${n}">${n === 0 ? 'Ninguna, de un tirón' : n + (n === 1 ? ' noche' : ' noches')}${per(n)}</option>`).join('');
+  sel.value = String(cur);
+  let hint = '';
+  if(h){ const n = cur === 'auto' ? autoN : +cur, dh = h / (n + 1);
+    hint = `${fmtKm(kmTot)} y ${fmtH(h)} de manejo en total: ${n === 0 ? 'todo en un día' : n + (n === 1 ? ' noche' : ' noches') + ' en el camino, unos ' + fmtKm(kmTot / (n + 1)) + ' por día'}.`;
+    if(dh > 11) hint += ' Son jornadas muy largas: conviene sumar una noche o turnarse para manejar.';
+    else if(dh < 4 && n > 0) hint += ' Son jornadas cortas: te sobra tiempo para pasear en cada parada.';
+  }else hint = 'Calculá la ruta y te digo cuántas horas manejarías por día con cada opción.';
+  $('#nights-hint').textContent = hint;
+}
+$('#f-nights').addEventListener('change', () => { S.prefs.nights = $('#f-nights').value; save(); renderNights(); if(PLAN?.routes) replanStops(PLAN.sel, S.prefs.nights === '0' ? 'Viaje de un tirón, sin noches en el camino' : 'Paradas para dormir actualizadas'); });
+$('#f-hours').addEventListener('change', () => { readForm(); renderNights(); });
 function renderCost(){
   const c = PLAN?.cost; if(!c){ $('#cost-card').hidden = true; return; }
   $('#cost-card').hidden = false;
@@ -1662,7 +1687,7 @@ attachAC($('#f-to'), r => { S.trip.to = r; save(); renderHero(); });
 $('#calc').onclick = planTrip;
 $$('#styles .style-opt').forEach(b => b.onclick = async () => {
   const s = b.dataset.s; if(s === S.prefs.style) return;
-  S.prefs.style = s; S.prefs.hours = STYLES[s].hours; $('#f-hours').value = S.prefs.hours; save(); fillForm(); SFX.ok();
+  S.prefs.style = s; S.prefs.hours = STYLES[s].hours; $('#f-hours').value = S.prefs.hours; save(); fillForm(); renderNights(); SFX.ok();
   toast(`Estilo ${STYLES[s].label}: ${STYLES[s].desc}`);
   if(PLAN?.events && !planning){ // re-elige hoteles/comida con el nuevo estilo sin pedir todo de nuevo
     rerankForStyle(); computeCost(); savePlan(); renderAll();
@@ -1721,13 +1746,13 @@ $$('.tabs button').forEach(b => b.onclick = () => { SFX.tap(); go(b.dataset.v); 
 function renderAll(){
   OPTS = {};
   if(PLAN?.geoms && !G) G = buildGeo(PLAN.geoms[PLAN.sel]);
-  renderHero(); renderRoutes(); renderStopsCard(); renderCost(); renderAlerts(); renderTimeline(); renderExpenses();
+  renderHero(); renderRoutes(); renderNights(); renderStopsCard(); renderCost(); renderAlerts(); renderTimeline(); renderExpenses();
   if(map) drawMap();
   if($('#v-mapa').classList.contains('on')) renderLive();
 }
 
 /* ============ inicio ============ */
-renderSnd(); fillForm(); fillVehicle(); renderVias(); resetExpForm(); renderAll(); renderRates();
+renderSnd(); fillForm(); fillVehicle(); renderVias(); renderNights(); resetExpForm(); renderAll(); renderRates();
 loadRates(); setInterval(() => loadRates(), 30 * 60e3);
 try{ const t = sessionStorage.getItem('bit.tab'); if(t) go(t); }catch{}
 if(!PLAN) planTrip(); // primera vez: arma el viaje precargado
