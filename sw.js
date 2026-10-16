@@ -1,6 +1,6 @@
 // Bitácora de Ruta — service worker: app offline + caché de mapas y consultas
-const V = 'bitacora-v4';
-const SHELL = ['./', './index.html', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png', './icons/apple-touch-icon.png'];
+const V = 'bitacora-v5';
+const SHELL = ['./', './index.html', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png', './icons/apple-touch-icon.png', './assets/robot.webp', './assets/robot-head.webp', './assets/robot.mp4'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(V).then(c => c.addAll(SHELL)).then(() => self.skipWaiting()));
